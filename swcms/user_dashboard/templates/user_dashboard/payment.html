@@ -1,0 +1,80 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Payment - SWCMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">Payment for Pickup</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Pickup Details</h5>
+                        <p><strong>Request ID:</strong> {{ pickup.request_id }}</p>
+                        <p><strong>Waste Type:</strong> {{ pickup.get_waste_type_display }}</p>
+                        <p><strong>Scheduled:</strong> {{ pickup.schedule_date_time|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Payment Details</h5>
+                        <p><strong>Amount:</strong> ₹{{ payment.amount }}</p>
+                        <p><strong>Status:</strong> <span class="badge bg-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></p>
+                    </div>
+                </div>
+                {% if payment.status == 'pending' %}
+                    <hr>
+                    <form method="post" id="payment-form">
+                        {% csrf_token %}
+                        <script
+                            src="https://checkout.razorpay.com/v1/checkout.js"
+                            data-key="{{ razorpay_key_id }}"
+                            data-amount="{{ amount|mul:100 }}"
+                            data-currency="INR"
+                            data-order_id="{{ order_id }}"
+                            data-buttontext="Pay with Razorpay"
+                            data-name="SWCMS"
+                            data-description="Waste Collection Payment"
+                            data-prefill.name="{{ user.get_full_name }}"
+                            data-prefill.email="{{ user.email }}"
+                            data-theme.color="#3399cc"
+                        ></script>
+                        <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+                        <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+                        <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+                    </form>
+                {% else %}
+                    <div class="alert alert-success">
+                        Payment has already been completed for this pickup.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'pickup_detail' pickup.pk %}" class="btn btn-secondary">Back to Pickup Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle Razorpay payment success
+    window.onload = function() {
+        var rzp = new Razorpay({
+            key: '{{ razorpay_key_id }}',
+            amount: {{ amount|mul:100 }},
+            currency: 'INR',
+            order_id: '{{ order_id }}',
+            name: 'SWCMS',
+            description: 'Waste Collection Payment',
+            handler: function (response) {
+                document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+                document.getElementById('razorpay_signature').value = response.razorpay_signature;
+                document.getElementById('payment-form').submit();
+            }
+        });
+        rzp.open();
+    };
+</script>
+{% endblock %}
