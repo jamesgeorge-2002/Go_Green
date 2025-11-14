@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Profile, PickupRequest, Ward
+from .models import Profile, PickupRequest, Ward, Reward, Feedback
 from datetime import datetime
 
 class UserRegistrationForm(forms.ModelForm):
@@ -185,6 +185,15 @@ class PickupRequestForm(forms.ModelForm):
         schedule_date_time = self.cleaned_data.get('schedule_date_time')
         if schedule_date_time:
             from django.utils import timezone
-            if schedule_date_time < timezone.now():
-                raise ValidationError("Schedule date and time must be in the future.")
+            now = timezone.now()
+            if schedule_date_time.date() < now.date():
+                raise ValidationError("Schedule date must be today or in the future.")
         return schedule_date_time
+
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = Feedback
+        fields = ['subject', 'message', 'is_complaint']
+        widgets = {
+            'message': forms.Textarea(attrs={'rows': 4}),
+        }

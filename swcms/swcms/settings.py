@@ -30,8 +30,8 @@ ALLOWED_HOSTS = []
 LOGIN_URL = 'login'
 
 # Razorpay settings
-RAZORPAY_KEY_ID = 'your_razorpay_key_id'
-RAZORPAY_KEY_SECRET = 'your_razorpay_key_secret'
+RAZORPAY_KEY_ID = 'rzp_test_RVEferDnVRYHXc'
+RAZORPAY_KEY_SECRET = '3lxVPZxfaMNh0GvsiYJL3433'
 
 
 # Application definition

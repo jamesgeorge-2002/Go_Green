@@ -1,0 +1,43 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Feedback - SWCMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">Submit Feedback</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.subject.id_for_label }}" class="form-label">Subject</label>
+                        {{ form.subject }}
+                        {% if form.subject.errors %}
+                            <div class="text-danger">{{ form.subject.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.message.id_for_label }}" class="form-label">Message</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            <div class="text-danger">{{ form.message.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_complaint }}
+                            <label class="form-check-label" for="{{ form.is_complaint.id_for_label }}">
+                                This is a complaint
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

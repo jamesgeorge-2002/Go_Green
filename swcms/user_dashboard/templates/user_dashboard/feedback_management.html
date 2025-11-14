@@ -1,0 +1,59 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Feedback Management - SWCMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">Feedback Management</h2>
+            </div>
+            <div class="card-body">
+                {% if feedbacks %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>User</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feedback in feedbacks %}
+                                    <tr>
+                                        <td>{{ feedback.subject }}</td>
+                                        <td>{{ feedback.user.username }}</td>
+                                        <td>
+                                            {% if feedback.is_complaint %}
+                                                <span class="badge bg-danger">Complaint</span>
+                                            {% else %}
+                                                <span class="badge bg-info">Feedback</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ feedback.status|lower }}">{{ feedback.get_status_display }}</span>
+                                        </td>
+                                        <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            {% if feedback.status == 'pending' %}
+                                                <a href="{% url 'resolve_feedback' feedback.pk %}" class="btn btn-sm btn-success">Resolve</a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No feedback available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

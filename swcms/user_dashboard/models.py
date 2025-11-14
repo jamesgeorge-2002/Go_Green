@@ -81,3 +81,18 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for {self.pickup_request} - {self.amount}"
+
+class Feedback(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    is_complaint = models.BooleanField(default=False)
+    ward = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('resolved', 'Resolved'),
+    ], default='pending')
+
+    def __str__(self):
+        return f"{self.subject} by {self.user.username} - {self.status}"

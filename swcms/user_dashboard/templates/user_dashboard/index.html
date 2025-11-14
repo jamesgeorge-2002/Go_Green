@@ -11,26 +11,29 @@
 
 <div class="row mb-4">
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
+        <div class="card stats-card">
+            <div class="card-body text-center">
                 <h5 class="card-title">Reward Points</h5>
-                <h2 class="text-success">{{ reward_points }}</h2>
+                <div class="stats-number">{{ reward_points }}</div>
+                <div class="stats-label">POINTS EARNED</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
+        <div class="card stats-card">
+            <div class="card-body text-center">
                 <h5 class="card-title">Upcoming Pickups</h5>
-                <h2 class="text-primary">{{ upcoming_pickups|length }}</h2>
+                <div class="stats-number">{{ upcoming_pickups|length }}</div>
+                <div class="stats-label">SCHEDULED</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
+        <div class="card stats-card">
+            <div class="card-body text-center">
                 <h5 class="card-title">Total Pickups</h5>
-                <h2 class="text-info">{{ total_pickups }}</h2>
+                <div class="stats-number">{{ total_pickups }}</div>
+                <div class="stats-label">COMPLETED</div>
             </div>
         </div>
     </div>
@@ -88,6 +91,7 @@
 <div class="row mt-4">
     <div class="col-12">
         <a href="{% url 'request_pickup' %}" class="btn btn-success btn-lg">Request New Pickup</a>
+        <a href="{% url 'request_management' %}" class="btn btn-info btn-lg ms-2">Manage Requests</a>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Worker Dashboard - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Worker Dashboard</h1>
+    <p>Manage pickup requests in your assigned ward.</p>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pending Pickups</h5>
+                    <div class="stats-number">{{ pending_pickups|length }}</div>
+                    <div class="stats-label">WAITING</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Picked Pickups</h5>
+                    <div class="stats-number">{{ picked_pickups|length }}</div>
+                    <div class="stats-label">IN PROGRESS</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Completed Pickups</h5>
+                    <div class="stats-number">{{ completed_pickups|length }}</div>
+                    <div class="stats-label">DONE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>Pending Pickups</h3>
+        {% if pending_pickups %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>User</th>
+                            <th>Waste Type</th>
+                            <th>Schedule Date & Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pickup in pending_pickups %}
+                            <tr>
+                                <td>{{ pickup.request_id.hex|slice:":8" }}</td>
+                                <td>{{ pickup.user.username }}</td>
+                                <td>{{ pickup.get_waste_type_display }}</td>
+                                <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'mark_picked' pickup.pk %}" class="btn btn-sm btn-success" onclick="return confirm('Mark this pickup as picked?')">Mark as Picked</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No pending pickups.</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <h3>Picked Pickups</h3>
+        {% if picked_pickups %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>User</th>
+                            <th>Waste Type</th>
+                            <th>Schedule Date & Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pickup in picked_pickups %}
+                            <tr>
+                                <td>{{ pickup.request_id.hex|slice:":8" }}</td>
+                                <td>{{ pickup.user.username }}</td>
+                                <td>{{ pickup.get_waste_type_display }}</td>
+                                <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'mark_completed' pickup.pk %}" class="btn btn-sm btn-primary" onclick="return confirm('Mark this pickup as completed?')">Mark as Completed</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No picked pickups.</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <h3>Completed Pickups</h3>
+        {% if completed_pickups %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>User</th>
+                            <th>Waste Type</th>
+                            <th>Schedule Date & Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pickup in completed_pickups %}
+                            <tr>
+                                <td>{{ pickup.request_id.hex|slice:":8" }}</td>
+                                <td>{{ pickup.user.username }}</td>
+                                <td>{{ pickup.get_waste_type_display }}</td>
+                                <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
+                                <td><span class="badge bg-success">Completed</span></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No completed pickups.</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <h3>Pending Feedbacks</h3>
+        {% if pending_feedbacks %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>User</th>
+                            <th>Message</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feedback in pending_feedbacks %}
+                            <tr>
+                                <td>{{ feedback.subject }}</td>
+                                <td>{{ feedback.user.username }}</td>
+                                <td>{{ feedback.message|truncatechars:50 }}</td>
+                                <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'resolve_feedback' feedback.pk %}" class="btn btn-sm btn-success" onclick="return confirm('Mark this feedback as resolved?')">Resolve</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No pending feedbacks.</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <h3>Resolved Feedbacks</h3>
+        {% if resolved_feedbacks %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>User</th>
+                            <th>Message</th>
+                            <th>Created At</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feedback in resolved_feedbacks %}
+                            <tr>
+                                <td>{{ feedback.subject }}</td>
+                                <td>{{ feedback.user.username }}</td>
+                                <td>{{ feedback.message|truncatechars:50 }}</td>
+                                <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
+                                <td><span class="badge bg-success">Resolved</span></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No resolved feedbacks.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
