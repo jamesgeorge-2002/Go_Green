@@ -1,0 +1,191 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Admin Dashboard - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Admin Dashboard</h1>
+    <p>Manage all aspects of the Smart Waste Collection & Management System.</p>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Users</h5>
+                    <div class="stats-number">{{ total_users }}</div>
+                    <div class="stats-label">REGISTERED</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Pickups</h5>
+                    <div class="stats-number">{{ total_pickups }}</div>
+                    <div class="stats-label">REQUESTED</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pending Pickups</h5>
+                    <div class="stats-number">{{ pending_pickups }}</div>
+                    <div class="stats-label">WAITING</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Completed Pickups</h5>
+                    <div class="stats-number">{{ completed_pickups }}</div>
+                    <div class="stats-label">DONE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Feedbacks</h5>
+                    <div class="stats-number">{{ total_feedbacks }}</div>
+                    <div class="stats-label">SUBMITTED</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pending Feedbacks</h5>
+                    <div class="stats-number">{{ pending_feedbacks }}</div>
+                    <div class="stats-label">UNRESOLVED</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>Manage Users</h3>
+        <a href="{% url 'admin_add_user' %}" class="btn btn-success mb-3">Add User</a>
+        <a href="{% url 'admin_add_worker' %}" class="btn btn-primary mb-3">Add Worker</a>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Mobile</th>
+                        <th>Location</th>
+                        <th>Ward</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.profile.role }}</td>
+                            <td>{{ user.profile.mobile_number|default:"N/A" }}</td>
+                            <td>{{ user.profile.location|default:"N/A" }}</td>
+                            <td>{{ user.profile.ward|default:"N/A" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'admin_update_role' user.profile.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <select name="role" class="form-select form-select-sm" style="width:auto; display:inline;">
+                                        <option value="user" {% if user.profile.role == 'user' %}selected{% endif %}>User</option>
+                                        <option value="worker" {% if user.profile.role == 'worker' %}selected{% endif %}>Worker</option>
+                                        <option value="admin" {% if user.profile.role == 'admin' %}selected{% endif %}>Admin</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary">Update Role</button>
+                                </form>
+                                {% if user.profile.role == 'worker' %}
+                                <form method="post" action="{% url 'admin_allocate_ward' user.profile.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <select name="ward" class="form-select form-select-sm" style="width:auto; display:inline;">
+                                        {% for ward in wards %}
+                                            <option value="{{ ward.pk }}" {% if user.profile.ward == ward %}selected{% endif %}>{{ ward.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-warning">Allocate Ward</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>Manage Feedbacks</h3>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>User</th>
+                        <th>Message</th>
+                        <th>Is Complaint</th>
+                        <th>Ward</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feedback in feedbacks %}
+                        <tr>
+                            <td>{{ feedback.subject }}</td>
+                            <td>{{ feedback.user.username }}</td>
+                            <td>{{ feedback.message|truncatechars:50 }}</td>
+                            <td>{% if feedback.is_complaint %}Yes{% else %}No{% endif %}</td>
+                            <td>{{ feedback.ward|default:"N/A" }}</td>
+                            <td><span class="badge bg-{% if feedback.status == 'pending' %}warning{% else %}success{% endif %}">{{ feedback.get_status_display }}</span></td>
+                            <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if feedback.status == 'pending' %}
+                                    <form method="post" action="{% url 'admin_respond_feedback' feedback.pk %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="text" name="response" placeholder="Response" class="form-control form-control-sm" style="width:150px; display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-success">Respond</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>Wards</h3>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Panchayat/Municipality</th>
+                        <th>Ward Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ward in wards %}
+                        <tr>
+                            <td>{{ ward.name }}</td>
+                            <td>{{ ward.get_panchayat_municipality_display }}</td>
+                            <td>{{ ward.ward_number }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

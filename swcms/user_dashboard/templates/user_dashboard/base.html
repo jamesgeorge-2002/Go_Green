@@ -43,12 +43,14 @@
             <nav class="col-md-2 d-none d-md-block sidebar">
                 <div class="sidebar-sticky">
                     <ul class="nav flex-column">
+                        {% if user.profile.role == 'user' %}
                         <li class="nav-item">
                             <a class="nav-link active" href="{% url 'index' %}">
                                 <svg class="bi" width="16" height="16"><use xlink:href="#home"></use></svg>
                                 Dashboard
                             </a>
                         </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'request_pickup' %}">
                                 <svg class="bi" width="16" height="16"><use xlink:href="#grid"></use></svg>
@@ -75,6 +77,14 @@
                             </a>
                         </li>
                         {% endif %}
+                        {% if user.profile.role == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                                <svg class="bi" width="16" height="16"><use xlink:href="#admin"></use></svg>
+                                Admin Dashboard
+                            </a>
+                        </li>
+                        {% endif %}
                         {% if user.profile.role in 'admin,worker' %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'feedback_management' %}">
@@ -88,7 +98,7 @@
             </nav>
             {% endif %}
 
-            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4" style="margin-left: 250px;">
                 <div class="mt-4">
                     {% if messages %}
                         {% for message in messages %}

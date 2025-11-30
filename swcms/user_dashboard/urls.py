@@ -20,4 +20,13 @@ urlpatterns = [
     path('worker-dashboard/', views.worker_dashboard_view, name='worker_dashboard'),
     path('mark-picked/<int:pk>/', views.mark_picked_view, name='mark_picked'),
     path('mark-completed/<int:pk>/', views.mark_completed_view, name='mark_completed'),
+    path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    path('admin-mark-picked/<int:pk>/', views.admin_mark_picked_view, name='admin_mark_picked'),
+    path('admin-mark-completed/<int:pk>/', views.admin_mark_completed_view, name='admin_mark_completed'),
+    path('admin-resolve-feedback/<int:pk>/', views.admin_resolve_feedback_view, name='admin_resolve_feedback'),
+    path('admin-update-role/<int:pk>/', views.admin_update_role_view, name='admin_update_role'),
+    path('admin-allocate-ward/<int:pk>/', views.admin_allocate_ward_view, name='admin_allocate_ward'),
+    path('admin-respond-feedback/<int:pk>/', views.admin_respond_feedback_view, name='admin_respond_feedback'),
+    path('admin-add-user/', views.admin_add_user_view, name='admin_add_user'),
+    path('admin-add-worker/', views.admin_add_worker_view, name='admin_add_worker'),
 ]

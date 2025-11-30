@@ -1,0 +1,15 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Add Worker - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Add Worker</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Add Worker</button>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

@@ -93,6 +93,7 @@ class Feedback(models.Model):
         ('pending', 'Pending'),
         ('resolved', 'Resolved'),
     ], default='pending')
+    response = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.subject} by {self.user.username} - {self.status}"
