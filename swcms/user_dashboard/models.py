@@ -51,6 +51,7 @@ class PickupRequest(models.Model):
     image = models.ImageField(upload_to='pickup_images/', blank=True, null=True)
     schedule_date_time = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    waste_weight = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Weight in kg")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -60,9 +61,10 @@ class PickupRequest(models.Model):
 class Reward(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
+    total_waste_collected = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Total waste collected in kg")
 
     def __str__(self):
-        return f"{self.user.username} - {self.points} points"
+        return f"{self.user.username} - {self.points} points ({self.total_waste_collected} kg)"
 
 class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = [

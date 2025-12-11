@@ -1,0 +1,42 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Rewards - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Rewards</h1>
+    <p class="text-muted">Reward points overview for users based on collected waste.</p>
+
+    {% if user_with_least_waste %}
+    <div class="alert alert-info">
+        <strong>User with least waste:</strong> {{ user_with_least_waste.user.username }}
+        ({{ user_with_least_waste.total_waste_collected }} kg collected, {{ user_with_least_waste.points }} points)
+    </div>
+    {% endif %}
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Total Waste Collected (kg)</th>
+                    <th>Reward Points</th>
+                    <th>Rank</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reward in rewards %}
+                    <tr>
+                        <td>{{ reward.user.username }}</td>
+                        <td><strong>{{ reward.total_waste_collected }}</strong></td>
+                        <td><span class="badge bg-success">{{ reward.points }}</span></td>
+                        <td>#{{ forloop.counter }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+

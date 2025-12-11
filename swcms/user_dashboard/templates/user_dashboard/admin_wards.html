@@ -1,0 +1,33 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Wards - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Wards</h1>
+    <p class="text-muted">Overview of all wards configured in the system.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Panchayat/Municipality</th>
+                    <th>Ward Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ward in wards %}
+                    <tr>
+                        <td>{{ ward.name }}</td>
+                        <td>{{ ward.get_panchayat_municipality_display }}</td>
+                        <td>{{ ward.ward_number }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+

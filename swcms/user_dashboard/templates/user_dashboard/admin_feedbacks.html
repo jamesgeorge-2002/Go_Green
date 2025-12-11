@@ -1,0 +1,55 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Manage Feedbacks - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Manage Feedbacks</h1>
+    <p class="text-muted">Review and respond to all user feedback and complaints.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>User</th>
+                    <th>Message</th>
+                    <th>Is Complaint</th>
+                    <th>Ward</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feedback in feedbacks %}
+                    <tr>
+                        <td>{{ feedback.subject }}</td>
+                        <td>{{ feedback.user.username }}</td>
+                        <td>{{ feedback.message|truncatechars:60 }}</td>
+                        <td>{% if feedback.is_complaint %}Yes{% else %}No{% endif %}</td>
+                        <td>{{ feedback.ward|default:"N/A" }}</td>
+                        <td>
+                            <span class="badge bg-{% if feedback.status == 'pending' %}warning{% else %}success{% endif %}">
+                                {{ feedback.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if feedback.status == 'pending' %}
+                                <form method="post" action="{% url 'admin_respond_feedback' feedback.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="text" name="response" placeholder="Response" class="form-control form-control-sm d-inline-block" style="width:180px;">
+                                    <button type="submit" class="btn btn-sm btn-success mt-1">Respond & Resolve</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+

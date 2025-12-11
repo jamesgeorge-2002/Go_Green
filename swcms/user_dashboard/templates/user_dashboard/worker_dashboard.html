@@ -1,206 +1,912 @@
-{% extends 'user_dashboard/base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard - SWCMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        /* Global Styles */
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2c3e50;
+            --success: #2ecc71;
+            --info: #3498db;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+        }
 
-{% block title %}Worker Dashboard - SWCMS{% endblock %}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-<div class="container mt-4">
-    <h1>Worker Dashboard</h1>
-    <p>Manage pickup requests in your assigned ward.</p>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
 
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Pending Pickups</h5>
-                    <div class="stats-number">{{ pending_pickups|length }}</div>
-                    <div class="stats-label">WAITING</div>
+        /* Navbar Styles */
+        .navbar {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 0.8rem 0;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-brand i {
+            font-size: 1.8rem;
+        }
+
+        .navbar-nav.ms-auto {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-info .username {
+            font-weight: 600;
+        }
+
+        .user-info .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 15px !important;
+            border-radius: 25px;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background: white;
+            min-height: calc(100vh - 70px);
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 250px;
+            padding: 25px 0;
+            border-right: 1px solid #eaeaea;
+            z-index: 100;
+        }
+
+        .sidebar-sticky {
+            padding: 0 20px;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #eaeaea;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h5 {
+            color: var(--secondary);
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sidebar-header small {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+
+        .sidebar .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .sidebar .nav-link {
+            color: #5a6c7d !important;
+            padding: 12px 20px !important;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-link:hover {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(52, 152, 219, 0.05) 100%);
+            color: var(--primary) !important;
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .sidebar-icon {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content Area */
+        main {
+            margin-left: 250px;
+            padding: 30px;
+            min-height: calc(100vh - 70px);
+            background-color: #f5f7fa;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary);
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-header h1 {
+            color: var(--secondary);
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .dashboard-header .lead {
+            color: var(--gray);
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--success), var(--warning));
+        }
+
+        .stats-card .card-body {
+            padding: 25px;
+        }
+
+        .stats-card .card-title {
+            color: var(--gray);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin: 10px 0;
+        }
+
+        .stats-label {
+            color: var(--gray);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* Section Headers */
+        h3 {
+            color: var(--secondary);
+            font-weight: 600;
+            margin: 30px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eaeaea;
+        }
+
+        /* Tables */
+        .table-responsive {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: var(--secondary);
+            padding: 15px 20px;
+            border-top: none;
+        }
+
+        .table tbody td {
+            padding: 15px 20px;
+            vertical-align: middle;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.08);
+        }
+
+        /* Badges */
+        .badge {
+            padding: 6px 12px;
+            font-weight: 500;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .bg-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important; }
+        .bg-success { background: linear-gradient(135deg, var(--success) 0%, #27ae60 100%) !important; }
+        .bg-info { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important; }
+        .bg-warning { background: linear-gradient(135deg, var(--warning) 0%, #e67e22 100%) !important; }
+        .bg-danger { background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%) !important; }
+        .bg-secondary { background: linear-gradient(135deg, var(--gray) 0%, #7f8c8d 100%) !important; }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-sm {
+            padding: 5px 15px;
+            font-size: 0.85rem;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #27ae60 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #1c6ea4 100%);
+            color: white;
+        }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Code styling for request IDs */
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Empty States */
+        .text-muted {
+            color: var(--gray) !important;
+            font-style: italic;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            main {
+                margin-left: 200px;
+                padding: 20px;
+            }
+            
+            .stats-number {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 70px;
+                left: -250px;
+                transition: left 0.3s ease;
+                z-index: 1000;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            main {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .stats-card {
+                margin-bottom: 15px;
+            }
+            
+            .navbar-nav.ms-auto {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 10px;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Animation for table rows */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .table tbody tr {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-pending { background-color: var(--warning); }
+        .status-picked { background-color: var(--primary); }
+        .status-completed { background-color: var(--success); }
+        .status-cancelled { background-color: var(--danger); }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(52, 152, 219, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notification badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'worker_dashboard' %}">
+                <i class="bi bi-recycle"></i>
+                SWCMS Worker
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <div class="user-info">
+                                <span class="username">{{ user.username }}</span>
+                                <span class="role-badge">👷 {{ user.profile.role|title }}</span>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link logout-btn" href="{% url 'logout' %}">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Logout
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    {% if user.is_authenticated %}
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h5>Worker Panel</h5>
+            <small>Manage pickups & feedback</small>
+        </div>
+        <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'worker_dashboard' %}">
+                        <span class="sidebar-icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'feedback_management' %}">
+                        <span class="sidebar-icon">💬</span>
+                        <span>Feedback Management</span>
+                        {% if pending_feedbacks %}
+                            <span class="notification-badge">{{ pending_feedbacks|length }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1>Worker Dashboard</h1>
+            <p class="lead">Manage pickup requests in your assigned ward.</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Pending Pickups</h5>
+                        <div class="stats-number">{{ pending_pickups|length }}</div>
+                        <div class="stats-label">WAITING</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Picked Pickups</h5>
+                        <div class="stats-number">{{ picked_pickups|length }}</div>
+                        <div class="stats-label">IN PROGRESS</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Completed Pickups</h5>
+                        <div class="stats-number">{{ completed_pickups|length }}</div>
+                        <div class="stats-label">DONE</div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Picked Pickups</h5>
-                    <div class="stats-number">{{ picked_pickups|length }}</div>
-                    <div class="stats-label">IN PROGRESS</div>
+
+        <!-- Pending Pickups Section -->
+        <div class="mt-4">
+            <h3>Pending Pickups</h3>
+            {% if pending_pickups %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>User</th>
+                                <th>Waste Type</th>
+                                <th>Schedule Date & Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pickup in pending_pickups %}
+                                <tr>
+                                    <td><code>{{ pickup.request_id|slice:":8" }}</code></td>
+                                    <td>{{ pickup.user.username }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ pickup.get_waste_type_display }}</span>
+                                    </td>
+                                    <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'mark_picked' pickup.pk %}" class="btn btn-sm btn-success" onclick="return confirm('Mark this pickup as picked?')">
+                                            <i class="bi bi-check-circle"></i> Mark as Picked
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            {% else %}
+                <p class="text-muted">No pending pickups.</p>
+            {% endif %}
         </div>
-        <div class="col-md-4">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Completed Pickups</h5>
-                    <div class="stats-number">{{ completed_pickups|length }}</div>
-                    <div class="stats-label">DONE</div>
+
+        <!-- Picked Pickups Section -->
+        <div class="mt-4">
+            <h3>Picked Pickups</h3>
+            {% if picked_pickups %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>User</th>
+                                <th>Waste Type</th>
+                                <th>Schedule Date & Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pickup in picked_pickups %}
+                                <tr>
+                                    <td><code>{{ pickup.request_id|slice:":8" }}</code></td>
+                                    <td>{{ pickup.user.username }}</td>
+                                    <td><span class="badge bg-info">{{ pickup.get_waste_type_display }}</span></td>
+                                    <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'mark_completed' pickup.pk %}" class="btn btn-sm btn-primary" onclick="return confirm('Mark this pickup as completed? You will need to enter the waste weight.')">
+                                            <i class="bi bi-check2-all"></i> Mark as Completed
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            {% else %}
+                <p class="text-muted">No picked pickups.</p>
+            {% endif %}
         </div>
-    </div>
 
-    <div class="mt-4">
-        <h3>Pending Pickups</h3>
-        {% if pending_pickups %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>User</th>
-                            <th>Waste Type</th>
-                            <th>Schedule Date & Time</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pickup in pending_pickups %}
+        <!-- Completed Pickups Section -->
+        <div class="mt-4">
+            <h3>Completed Pickups</h3>
+            {% if completed_pickups %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
                             <tr>
-                                <td>{{ pickup.request_id.hex|slice:":8" }}</td>
-                                <td>{{ pickup.user.username }}</td>
-                                <td>{{ pickup.get_waste_type_display }}</td>
-                                <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
-                                <td>
-                                    <a href="{% url 'mark_picked' pickup.pk %}" class="btn btn-sm btn-success" onclick="return confirm('Mark this pickup as picked?')">Mark as Picked</a>
-                                </td>
+                                <th>Request ID</th>
+                                <th>User</th>
+                                <th>Waste Type</th>
+                                <th>Weight (kg)</th>
+                                <th>Schedule Date & Time</th>
+                                <th>Status</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p>No pending pickups.</p>
-        {% endif %}
-    </div>
+                        </thead>
+                        <tbody>
+                            {% for pickup in completed_pickups %}
+                                <tr>
+                                    <td><code>{{ pickup.request_id|slice:":8" }}</code></td>
+                                    <td>{{ pickup.user.username }}</td>
+                                    <td><span class="badge bg-info">{{ pickup.get_waste_type_display }}</span></td>
+                                    <td><strong>{{ pickup.waste_weight|default:"N/A" }}</strong></td>
+                                    <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No completed pickups.</p>
+            {% endif %}
+        </div>
 
-    <div class="mt-4">
-        <h3>Picked Pickups</h3>
-        {% if picked_pickups %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>User</th>
-                            <th>Waste Type</th>
-                            <th>Schedule Date & Time</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pickup in picked_pickups %}
+        <!-- Pending Feedbacks Section -->
+        <div class="mt-4">
+            <h3>Pending Feedbacks <span class="badge bg-warning">{{ pending_feedbacks|length }}</span></h3>
+            {% if pending_feedbacks %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
                             <tr>
-                                <td>{{ pickup.request_id.hex|slice:":8" }}</td>
-                                <td>{{ pickup.user.username }}</td>
-                                <td>{{ pickup.get_waste_type_display }}</td>
-                                <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
-                                <td>
-                                    <a href="{% url 'mark_completed' pickup.pk %}" class="btn btn-sm btn-primary" onclick="return confirm('Mark this pickup as completed?')">Mark as Completed</a>
-                                </td>
+                                <th>Subject</th>
+                                <th>User</th>
+                                <th>Message</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p>No picked pickups.</p>
-        {% endif %}
-    </div>
+                        </thead>
+                        <tbody>
+                            {% for feedback in pending_feedbacks %}
+                                <tr>
+                                    <td>{{ feedback.subject }}</td>
+                                    <td>{{ feedback.user.username }}</td>
+                                    <td>{{ feedback.message|truncatechars:50 }}</td>
+                                    <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'resolve_feedback' feedback.pk %}" class="btn btn-sm btn-success" onclick="return confirm('Mark this feedback as resolved?')">
+                                            <i class="bi bi-check2-circle"></i> Resolve
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No pending feedbacks.</p>
+            {% endif %}
+        </div>
 
-    <div class="mt-4">
-        <h3>Completed Pickups</h3>
-        {% if completed_pickups %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>User</th>
-                            <th>Waste Type</th>
-                            <th>Schedule Date & Time</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pickup in completed_pickups %}
+        <!-- Resolved Feedbacks Section -->
+        <div class="mt-4">
+            <h3>Resolved Feedbacks</h3>
+            {% if resolved_feedbacks %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
                             <tr>
-                                <td>{{ pickup.request_id.hex|slice:":8" }}</td>
-                                <td>{{ pickup.user.username }}</td>
-                                <td>{{ pickup.get_waste_type_display }}</td>
-                                <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
-                                <td><span class="badge bg-success">Completed</span></td>
+                                <th>Subject</th>
+                                <th>User</th>
+                                <th>Message</th>
+                                <th>Created At</th>
+                                <th>Status</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p>No completed pickups.</p>
-        {% endif %}
-    </div>
+                        </thead>
+                        <tbody>
+                            {% for feedback in resolved_feedbacks %}
+                                <tr>
+                                    <td>{{ feedback.subject }}</td>
+                                    <td>{{ feedback.user.username }}</td>
+                                    <td>{{ feedback.message|truncatechars:50 }}</td>
+                                    <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
+                                    <td><span class="badge bg-success">Resolved</span></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No resolved feedbacks.</p>
+            {% endif %}
+        </div>
+    </main>
 
-    <div class="mt-4">
-        <h3>Pending Feedbacks</h3>
-        {% if pending_feedbacks %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Subject</th>
-                            <th>User</th>
-                            <th>Message</th>
-                            <th>Created At</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for feedback in pending_feedbacks %}
-                            <tr>
-                                <td>{{ feedback.subject }}</td>
-                                <td>{{ feedback.user.username }}</td>
-                                <td>{{ feedback.message|truncatechars:50 }}</td>
-                                <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
-                                <td>
-                                    <a href="{% url 'resolve_feedback' feedback.pk %}" class="btn btn-sm btn-success" onclick="return confirm('Mark this feedback as resolved?')">Resolve</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p>No pending feedbacks.</p>
-        {% endif %}
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Add loading animation to buttons when clicked
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation to stats cards
+            const statNumbers = document.querySelectorAll('.stats-number');
+            statNumbers.forEach(stat => {
+                const finalValue = parseInt(stat.textContent);
+                let currentValue = 0;
+                const increment = finalValue / 30;
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= finalValue) {
+                        stat.textContent = finalValue;
+                        clearInterval(timer);
+                    } else {
+                        stat.textContent = Math.floor(currentValue);
+                    }
+                }, 50);
+            });
 
-    <div class="mt-4">
-        <h3>Resolved Feedbacks</h3>
-        {% if resolved_feedbacks %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Subject</th>
-                            <th>User</th>
-                            <th>Message</th>
-                            <th>Created At</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for feedback in resolved_feedbacks %}
-                            <tr>
-                                <td>{{ feedback.subject }}</td>
-                                <td>{{ feedback.user.username }}</td>
-                                <td>{{ feedback.message|truncatechars:50 }}</td>
-                                <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
-                                <td><span class="badge bg-success">Resolved</span></td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p>No resolved feedbacks.</p>
-        {% endif %}
-    </div>
-</div>
-{% endblock %}
+            // Add confirm dialogs to action buttons
+            const actionButtons = document.querySelectorAll('a[href*="mark_"], a[href*="resolve_"]');
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const action = this.textContent.trim();
+                    if (!confirm(`Are you sure you want to ${action.toLowerCase()}?`)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            // Add hover effects to table rows
+            const tableRows = document.querySelectorAll('.table tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px)';
+                    this.style.transition = 'transform 0.3s ease';
+                });
+                row.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                });
+            });
+
+            // Mobile sidebar toggle
+            const mobileMenuBtn = document.createElement('button');
+            mobileMenuBtn.className = 'btn btn-primary d-md-none mobile-menu-btn';
+            mobileMenuBtn.innerHTML = '<i class="bi bi-list"></i>';
+            mobileMenuBtn.style.position = 'fixed';
+            mobileMenuBtn.style.bottom = '20px';
+            mobileMenuBtn.style.right = '20px';
+            mobileMenuBtn.style.zIndex = '1000';
+            mobileMenuBtn.style.borderRadius = '50%';
+            mobileMenuBtn.style.width = '50px';
+            mobileMenuBtn.style.height = '50px';
+            mobileMenuBtn.style.fontSize = '1.2rem';
+            
+            mobileMenuBtn.addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+            
+            document.body.appendChild(mobileMenuBtn);
+        });
+    </script>
+</body>
+</html>

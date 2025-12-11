@@ -1,97 +1,741 @@
-{% extends 'user_dashboard/base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SWCMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom CSS for SWCMS */
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
 
-{% block title %}Dashboard - SWCMS{% endblock %}
+        /* Top Navigation Bar */
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            border-bottom: 1px solid #eaeaea;
+        }
 
-{% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">Smart Waste Collection & Management System</h1>
-    </div>
-</div>
+        .navbar-brand {
+            color: #2c3e50 !important;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card stats-card">
-            <div class="card-body text-center">
-                <h5 class="card-title">Reward Points</h5>
-                <div class="stats-number">{{ reward_points }}</div>
-                <div class="stats-label">POINTS EARNED</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stats-card">
-            <div class="card-body text-center">
-                <h5 class="card-title">Upcoming Pickups</h5>
-                <div class="stats-number">{{ upcoming_pickups|length }}</div>
-                <div class="stats-label">SCHEDULED</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stats-card">
-            <div class="card-body text-center">
-                <h5 class="card-title">Total Pickups</h5>
-                <div class="stats-number">{{ total_pickups }}</div>
-                <div class="stats-label">COMPLETED</div>
-            </div>
-        </div>
-    </div>
-</div>
+        .navbar-nav.ms-auto {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Upcoming Pickups</h5>
-            </div>
-            <div class="card-body">
-                {% if upcoming_pickups %}
-                    <div class="list-group">
-                        {% for pickup in upcoming_pickups %}
-                            <div class="list-group-item">
-                                <h6 class="mb-1">{{ pickup.get_waste_type_display }}</h6>
-                                <p class="mb-1">{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</p>
-                                <small class="text-muted">{{ pickup.get_status_display }}</small>
-                                <a href="{% url 'pickup_detail' pickup.pk %}" class="btn btn-sm btn-outline-primary float-end">View</a>
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border-radius: 20px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .user-info .username {
+            font-weight: 600;
+        }
+
+        .nav-link {
+            color: #2c3e50 !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 15px !important;
+            border-radius: 20px;
+        }
+
+        .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #3498db !important;
+        }
+
+        .navbar-toggler {
+            border: none;
+            padding: 5px;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2844, 62, 80, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Clean Sidebar */
+        .sidebar {
+            background: white;
+            min-height: calc(100vh - 73px);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            top: 73px;
+            left: 0;
+            width: 250px;
+            padding: 20px 0;
+            border-right: 1px solid #eaeaea;
+        }
+
+        .sidebar-sticky {
+            padding: 0 15px;
+        }
+
+        .sidebar .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .sidebar .nav-link {
+            color: #5a6c7d !important;
+            padding: 12px 20px !important;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #3498db !important;
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
+
+        .sidebar-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Main Content Area */
+        main {
+            padding: 30px;
+            min-height: calc(100vh - 73px);
+            margin-left: 250px;
+            background-color: #f8f9fa;
+        }
+
+        /* Alert Messages */
+        .alert {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 15px 20px;
+        }
+
+        .alert-success {
+            background-color: #e8f6ef;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-danger {
+            background-color: #fdeded;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-warning {
+            background-color: #fff8e6;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .alert-info {
+            background-color: #e8f4fc;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #3498db;
+        }
+
+        .dashboard-header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-header .lead {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            position: relative;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-card .card-body {
+            padding: 25px;
+        }
+
+        .stats-card .card-title {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2c3e50;
+            line-height: 1;
+            margin: 10px 0;
+        }
+
+        .stats-label {
+            color: #95a5a6;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* Content Cards */
+        .card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+            margin-bottom: 20px;
+            background: white;
+        }
+
+        .card:hover {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #eaeaea;
+            padding: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h5 {
+            margin: 0;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        /* Pickup List Items */
+        .list-group-item {
+            border: 1px solid #eaeaea;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+            border-color: #3498db;
+            transform: translateX(5px);
+        }
+
+        .list-group-item h6 {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .list-group-item p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        /* Action Buttons */
+        .btn-lg {
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-lg:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1c6ea4 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Badges */
+        .badge {
+            padding: 5px 12px;
+            font-weight: 500;
+            border-radius: 20px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #95a5a6;
+        }
+
+        .empty-state h5 {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        /* Progress Bar */
+        .progress {
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 15px;
+            background-color: #e9ecef;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 3px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            main {
+                margin-left: 200px;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: static;
+                width: 100%;
+                min-height: auto;
+                margin-bottom: 20px;
+                top: 0;
+            }
+            
+            main {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .navbar-nav.ms-auto {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                margin-top: 10px;
+            }
+            
+            .user-info {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .stats-number {
+                font-size: 2rem;
+            }
+            
+            .btn-lg {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .btn-lg.ms-2 {
+                margin-left: 0 !important;
+            }
+        }
+
+        /* Animation */
+        .animate-card {
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'index' %}">SWCMS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <div class="user-info">
+                                <span class="username">{{ user.username }}</span>
+                                <span class="role-badge">👤 {{ user.profile.role|title }}</span>
                             </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">No upcoming pickups.</p>
-                {% endif %}
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">
+                                <span>🚪 Logout</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Recent Pickups</h5>
-            </div>
-            <div class="card-body">
-                {% if previous_pickups %}
-                    <div class="list-group">
-                        {% for pickup in previous_pickups %}
-                            <div class="list-group-item">
-                                <h6 class="mb-1">{{ pickup.get_waste_type_display }}</h6>
-                                <p class="mb-1">{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</p>
-                                <small class="text-muted">{{ pickup.get_status_display }}</small>
-                                <a href="{% url 'pickup_detail' pickup.pk %}" class="btn btn-sm btn-outline-primary float-end">View</a>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">No recent pickups.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
+    </nav>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <a href="{% url 'request_pickup' %}" class="btn btn-success btn-lg">Request New Pickup</a>
-        <a href="{% url 'request_management' %}" class="btn btn-info btn-lg ms-2">Manage Requests</a>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Clean White Sidebar -->
+            {% if user.is_authenticated %}
+            <nav class="sidebar d-none d-md-block">
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        {% if user.profile.role == 'user' %}
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'index' %}">
+                                <span class="sidebar-icon">📊</span>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'request_pickup' %}">
+                                <span class="sidebar-icon">🗑️</span>
+                                <span>Request Pickup</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'request_management' %}">
+                                <span class="sidebar-icon">📋</span>
+                                <span>Manage Requests</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'feedback' %}">
+                                <span class="sidebar-icon">💬</span>
+                                <span>Feedback</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if user.profile.role == 'worker' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'worker_dashboard' %}">
+                                <span class="sidebar-icon">🛠️</span>
+                                <span>Worker Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'feedback_management' %}">
+                                <span class="sidebar-icon">📝</span>
+                                <span>Manage Feedback</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if user.profile.role == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                                <span class="sidebar-icon">👑</span>
+                                <span>Admin Overview</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_users' %}">
+                                <span class="sidebar-icon">👥</span>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_feedbacks' %}">
+                                <span class="sidebar-icon">💭</span>
+                                <span>Feedbacks</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_rewards' %}">
+                                <span class="sidebar-icon">🏆</span>
+                                <span>Rewards</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_wards' %}">
+                                <span class="sidebar-icon">🏙️</span>
+                                <span>Wards</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </nav>
+            {% endif %}
+
+            <!-- Main Content Area -->
+            <main role="main">
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Dashboard Content -->
+                <div class="dashboard-header animate-card" style="animation-delay: 0.1s">
+                    <h1>Smart Waste Collection Dashboard</h1>
+                    <p class="lead">Welcome back, {{ user.username }}! Manage your waste collection efficiently.</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card stats-card animate-card" style="animation-delay: 0.2s">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Reward Points</h5>
+                                <div class="stats-number">{{ reward_points }}</div>
+                                <div class="stats-label">POINTS EARNED</div>
+                                <div class="progress mt-3">
+                                    <div class="progress-bar" style="width: {{ reward_points|divisibleby:1000|yesno:'100,70,30' }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card stats-card animate-card" style="animation-delay: 0.3s">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Upcoming Pickups</h5>
+                                <div class="stats-number">{{ upcoming_pickups|length }}</div>
+                                <div class="stats-label">SCHEDULED</div>
+                                <div class="progress mt-3">
+                                    <div class="progress-bar" style="width: {{ upcoming_pickups|length|divisibleby:5|yesno:'100,70,30' }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card stats-card animate-card" style="animation-delay: 0.4s">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Pickups</h5>
+                                <div class="stats-number">{{ total_pickups }}</div>
+                                <div class="stats-label">COMPLETED</div>
+                                <div class="progress mt-3">
+                                    <div class="progress-bar" style="width: {{ total_pickups|divisibleby:10|yesno:'100,70,30' }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pickup Lists -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card animate-card" style="animation-delay: 0.5s">
+                            <div class="card-header">
+                                <h5>Upcoming Pickups</h5>
+                                <span class="badge bg-primary">{{ upcoming_pickups|length }}</span>
+                            </div>
+                            <div class="card-body">
+                                {% if upcoming_pickups %}
+                                    <div class="list-group">
+                                        {% for pickup in upcoming_pickups %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1">{{ pickup.get_waste_type_display }}</h6>
+                                                        <p class="mb-1">{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</p>
+                                                        <small class="badge {% if pickup.status == 'pending' %}bg-warning{% elif pickup.status == 'confirmed' %}bg-info{% elif pickup.status == 'completed' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                            {{ pickup.get_status_display }}
+                                                        </small>
+                                                    </div>
+                                                    <a href="{% url 'pickup_detail' pickup.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="empty-state">
+                                        <h5>No Upcoming Pickups</h5>
+                                        <p>Schedule a pickup to get started!</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card animate-card" style="animation-delay: 0.6s">
+                            <div class="card-header">
+                                <h5>Recent Pickups</h5>
+                                <span class="badge bg-secondary">{{ previous_pickups|length }}</span>
+                            </div>
+                            <div class="card-body">
+                                {% if previous_pickups %}
+                                    <div class="list-group">
+                                        {% for pickup in previous_pickups %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1">{{ pickup.get_waste_type_display }}</h6>
+                                                        <p class="mb-1">{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</p>
+                                                        <small class="badge {% if pickup.status == 'completed' %}bg-success{% elif pickup.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                            {{ pickup.get_status_display }}
+                                                        </small>
+                                                    </div>
+                                                    <a href="{% url 'pickup_detail' pickup.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="empty-state">
+                                        <h5>No Recent Activity</h5>
+                                        <p>Your pickup history will appear here</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <a href="{% url 'request_pickup' %}" class="btn btn-success btn-lg">Request New Pickup</a>
+                        <a href="{% url 'request_management' %}" class="btn btn-info btn-lg ms-2">Manage Requests</a>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
-</div>
-{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Add animation classes to elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add hover effect to all cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Animate stats numbers
+            const statNumbers = document.querySelectorAll('.stats-number');
+            statNumbers.forEach(stat => {
+                const finalValue = parseInt(stat.textContent);
+                let currentValue = 0;
+                const increment = finalValue / 30;
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= finalValue) {
+                        stat.textContent = finalValue;
+                        clearInterval(timer);
+                    } else {
+                        stat.textContent = Math.floor(currentValue);
+                    }
+                }, 50);
+            });
+        });
+    </script>
+</body>
+</html>

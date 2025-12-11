@@ -3,37 +3,381 @@
 {% block title %}Login - SWCMS{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
+<style>
+    /* Login Page Specific Styles */
+    .auth-page {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        padding: 40px 0;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+
+    .auth-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        background: white;
+    }
+
+    .auth-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .auth-card .card-header {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+        padding: 30px 20px;
+        border-bottom: none;
+    }
+
+    .auth-card .card-header h2 {
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+
+    .auth-card .card-header p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .auth-card .card-body {
+        padding: 30px;
+    }
+
+    .auth-card .card-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #eaeaea;
+        padding: 20px;
+        font-size: 0.9rem;
+    }
+
+    .auth-card .card-footer a {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .auth-card .card-footer a:hover {
+        color: #2980b9;
+        text-decoration: underline;
+    }
+
+    /* Form Styles */
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        border: 2px solid #e1e5eb;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+    }
+
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        background-color: white;
+    }
+
+    .form-control:focus::placeholder {
+        color: transparent;
+    }
+
+    /* Password field specific */
+    input[type="password"] {
+        letter-spacing: 1px;
+    }
+
+    /* Error Messages */
+    .text-danger {
+        font-size: 0.85rem;
+        margin-top: 5px;
+        color: #e74c3c !important;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .text-danger::before {
+        content: "⚠";
+        font-size: 0.8rem;
+    }
+
+    /* Login Button */
+    .btn-primary {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 14px;
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+        margin-top: 10px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    /* Form Group Animation */
+    .mb-3 {
+        animation: slideIn 0.5s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .mb-3:nth-child(1) { animation-delay: 0.1s; }
+    .mb-3:nth-child(2) { animation-delay: 0.2s; }
+    .btn-primary { animation: slideIn 0.5s ease-out 0.3s forwards; }
+
+    @keyframes slideIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .auth-page {
+            padding: 20px;
+            min-height: calc(100vh - 150px);
+        }
+        
+        .auth-card {
+            margin: 0 15px;
+        }
+        
+        .auth-card .card-header {
+            padding: 25px 15px;
+        }
+        
+        .auth-card .card-body {
+            padding: 25px 20px;
+        }
+        
+        .auth-card .card-header h2 {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .col-md-6 {
+            padding: 0;
+        }
+        
+        .auth-card {
+            border-radius: 10px;
+        }
+        
+        .form-control {
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+        
+        .btn-primary {
+            padding: 12px;
+            font-size: 0.95rem;
+        }
+    }
+
+    /* Additional Decorations */
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3498db, #2ecc71, #f1c40f);
+        background-size: 300% 100%;
+        animation: gradientSlide 3s ease infinite;
+    }
+
+    @keyframes gradientSlide {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Placeholder Styling */
+    ::placeholder {
+        color: #95a5a6;
+        opacity: 0.8;
+    }
+
+    /* Password Visibility Toggle */
+    .password-toggle {
+        position: relative;
+    }
+
+    .password-toggle .toggle-btn {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #7f8c8d;
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    /* Loading State */
+    .btn-primary.loading {
+        position: relative;
+        color: transparent;
+    }
+
+    .btn-primary.loading::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 20px;
+        height: 20px;
+        border: 2px solid white;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+</style>
+
+<div class="auth-page row justify-content-center">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+        <div class="card auth-card">
             <div class="card-header text-center">
                 <h2 class="mb-0">Welcome Back</h2>
                 <p class="text-muted mb-0">Sign in to your account</p>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" id="loginForm">
                     {% csrf_token %}
-                    <div class="mb-3">
+                    
+                    <div class="mb-4">
                         <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
-                        {{ form.username }}
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                            {{ form.username }}
+                        </div>
                         {% if form.username.errors %}
-                            <div class="text-danger">{{ form.username.errors }}</div>
+                            <div class="text-danger mt-2">{{ form.username.errors }}</div>
                         {% endif %}
                     </div>
-                    <div class="mb-3">
+                    
+                    <div class="mb-4 password-toggle">
                         <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
-                        {{ form.password }}
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </span>
+                            {{ form.password }}
+                            <button type="button" class="toggle-btn" onclick="togglePassword()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
                         {% if form.password.errors %}
-                            <div class="text-danger">{{ form.password.errors }}</div>
+                            <div class="text-danger mt-2">{{ form.password.errors }}</div>
                         {% endif %}
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" id="loginBtn">
+                            <span>Login</span>
+                        </button>
+                    </div>
                 </form>
             </div>
             <div class="card-footer text-center">
-                <p class="mb-0">Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+                <p class="mb-0">Don't have an account? <a href="{% url 'register' %}" class="fw-bold">Register here</a></p>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Password toggle functionality
+    function togglePassword() {
+        const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+        const toggleBtn = document.querySelector('.toggle-btn');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+            `;
+        } else {
+            passwordInput.type = 'password';
+            toggleBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            `;
+        }
+    }
+    
+    // Form submission loading state
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const btn = document.getElementById('loginBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+    });
+    
+    // Add classes to form inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        const usernameInput = document.getElementById('{{ form.username.id_for_label }}');
+        const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+        
+        if (usernameInput) {
+            usernameInput.className = 'form-control';
+            usernameInput.placeholder = 'Enter your username';
+        }
+        
+        if (passwordInput) {
+            passwordInput.className = 'form-control';
+            passwordInput.placeholder = 'Enter your password';
+        }
+    });
+</script>
 {% endblock %}

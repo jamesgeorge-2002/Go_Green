@@ -21,6 +21,10 @@ urlpatterns = [
     path('mark-picked/<int:pk>/', views.mark_picked_view, name='mark_picked'),
     path('mark-completed/<int:pk>/', views.mark_completed_view, name='mark_completed'),
     path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    path('admin-users/', views.admin_users_view, name='admin_users'),
+    path('admin-feedbacks/', views.admin_feedbacks_view, name='admin_feedbacks'),
+    path('admin-wards/', views.admin_wards_view, name='admin_wards'),
+    path('admin-rewards/', views.admin_rewards_view, name='admin_rewards'),
     path('admin-mark-picked/<int:pk>/', views.admin_mark_picked_view, name='admin_mark_picked'),
     path('admin-mark-completed/<int:pk>/', views.admin_mark_completed_view, name='admin_mark_completed'),
     path('admin-resolve-feedback/<int:pk>/', views.admin_resolve_feedback_view, name='admin_resolve_feedback'),
@@ -29,4 +33,6 @@ urlpatterns = [
     path('admin-respond-feedback/<int:pk>/', views.admin_respond_feedback_view, name='admin_respond_feedback'),
     path('admin-add-user/', views.admin_add_user_view, name='admin_add_user'),
     path('admin-add-worker/', views.admin_add_worker_view, name='admin_add_worker'),
+    path('admin-delete-user/<int:pk>/', views.admin_delete_user_view, name='admin_delete_user'),
+    path('admin-give-reward-least-waste/', views.admin_give_reward_to_least_waste_view, name='admin_give_reward_least_waste'),
 ]

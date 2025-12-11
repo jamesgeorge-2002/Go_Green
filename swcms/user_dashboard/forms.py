@@ -89,7 +89,7 @@ class WorkerRegistrationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
-            # Create or get Ward
+            # Create or get Ward and attach to worker profile
             panchayat_municipality = self.cleaned_data.get('panchayat_municipality')
             ward_name = self.cleaned_data.get('ward_name')
             ward_number = self.cleaned_data.get('ward_number')
@@ -107,7 +107,6 @@ class WorkerRegistrationForm(forms.ModelForm):
                     'role': 'worker'
                 }
             )
-            Reward.objects.get_or_create(user=user, defaults={'points': 0})
         return user
 
 class AdminRegistrationForm(forms.ModelForm):
@@ -142,7 +141,7 @@ class AdminRegistrationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
-            # Create or get Ward
+            # Create or get Ward and attach to admin profile
             panchayat_municipality = self.cleaned_data.get('panchayat_municipality')
             ward_name = self.cleaned_data.get('ward_name')
             ward_number = self.cleaned_data.get('ward_number')
@@ -160,7 +159,6 @@ class AdminRegistrationForm(forms.ModelForm):
                     'role': 'admin'
                 }
             )
-            Reward.objects.get_or_create(user=user, defaults={'points': 0})
         return user
 
 class LoginForm(forms.Form):
@@ -197,3 +195,12 @@ class FeedbackForm(forms.ModelForm):
         widgets = {
             'message': forms.Textarea(attrs={'rows': 4}),
         }
+
+class WasteWeightForm(forms.Form):
+    waste_weight = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0.01,
+        help_text="Enter weight in kg",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'})
+    )
