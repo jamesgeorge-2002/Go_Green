@@ -3,54 +3,532 @@
 {% block title %}Pickup Detail - SWCMS{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="mb-0">Pickup Request Details</h2>
+<div class="pickup-detail-container">
+    <!-- Header Section -->
+    <div class="pickup-detail-header">
+        <div class="header-content">
+            <h1>🗑️ Pickup Request Details</h1>
+            <p class="header-subtitle">View and manage your waste collection request</p>
+        </div>
+        <div class="status-badge-large">
+            <span class="badge-status {% if pickup.status == 'pending' %}status-pending{% elif pickup.status == 'confirmed' %}status-confirmed{% elif pickup.status == 'completed' %}status-completed{% elif pickup.status == 'cancelled' %}status-cancelled{% else %}status-unknown{% endif %}">
+                {{ pickup.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="pickup-detail-content">
+        <!-- Request ID Card -->
+        <div class="info-card request-id-card">
+            <div class="card-icon">📋</div>
+            <div class="card-content">
+                <p class="card-label">Request ID</p>
+                <p class="card-value">{{ pickup.request_id }}</p>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Request Information</h5>
-                        <p><strong>Request ID:</strong> {{ pickup.request_id }}</p>
-                        <p><strong>Waste Type:</strong> {{ pickup.get_waste_type_display }}</p>
-                        <p><strong>Status:</strong> <span class="badge bg-{{ pickup.status|lower }}">{{ pickup.get_status_display }}</span></p>
-                        <p><strong>Scheduled:</strong> {{ pickup.schedule_date_time|date:"M d, Y H:i" }}</p>
-                        <p><strong>Created:</strong> {{ pickup.created_at|date:"M d, Y H:i" }}</p>
-                        {% if pickup.updated_at != pickup.created_at %}
-                            <p><strong>Updated:</strong> {{ pickup.updated_at|date:"M d, Y H:i" }}</p>
-                        {% endif %}
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="row">
+            <!-- Left Column: Details -->
+            <div class="col-lg-6">
+                <!-- Waste Type Card -->
+                <div class="detail-card">
+                    <div class="card-title-section">
+                        <h5>♻️ Waste Information</h5>
                     </div>
-                    <div class="col-md-6">
-                        <h5>Description</h5>
-                        <p>{{ pickup.description|linebreaks }}</p>
-                        {% if pickup.image %}
-                            <h5>Image</h5>
-                            <img src="{{ pickup.image.url }}" alt="Pickup Image" class="img-fluid rounded">
+                    <div class="card-detail-body">
+                        <div class="detail-item">
+                            <span class="detail-label">Waste Type</span>
+                            <span class="detail-value waste-type-badge">
+                                {% if pickup.waste_type == 'wet' %}
+                                    🍃 {{ pickup.get_waste_type_display }}
+                                {% elif pickup.waste_type == 'dry' %}
+                                    📦 {{ pickup.get_waste_type_display }}
+                                {% elif pickup.waste_type == 'plastic' %}
+                                    🔴 {{ pickup.get_waste_type_display }}
+                                {% elif pickup.waste_type == 'ewaste' %}
+                                    ⚡ {{ pickup.get_waste_type_display }}
+                                {% else %}
+                                    {{ pickup.get_waste_type_display }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Description</span>
+                            <span class="detail-value description-text">{{ pickup.description|linebreaks }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Card -->
+                <div class="detail-card">
+                    <div class="card-title-section">
+                        <h5>📅 Schedule Information</h5>
+                    </div>
+                    <div class="card-detail-body">
+                        <div class="detail-item">
+                            <span class="detail-label">Scheduled Date & Time</span>
+                            <span class="detail-value">
+                                📍 {{ pickup.schedule_date_time|date:"d M, Y" }} at {{ pickup.schedule_date_time|date:"H:i" }}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Created</span>
+                            <span class="detail-value">{{ pickup.created_at|date:"d M, Y H:i" }}</span>
+                        </div>
+                        {% if pickup.updated_at != pickup.created_at %}
+                        <div class="detail-item">
+                            <span class="detail-label">Last Updated</span>
+                            <span class="detail-value">{{ pickup.updated_at|date:"d M, Y H:i" }}</span>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
-                {% if payment %}
-                    <hr>
-                    <div class="row">
-                        <div class="col-12">
-                            <h5>Payment Information</h5>
-                            <p><strong>Amount:</strong> ₹{{ payment.amount }}</p>
-                            <p><strong>Status:</strong> <span class="badge bg-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></p>
-                            {% if payment.status == 'pending' %}
-                                <a href="{% url 'payment' pickup.pk %}" class="btn btn-success">Make Payment</a>
-                            {% elif payment.status == 'completed' %}
-                                <p class="text-success">Payment completed successfully.</p>
+            </div>
+
+            <!-- Right Column: Image & Payment -->
+            <div class="col-lg-6">
+                <!-- Image Section -->
+                {% if pickup.image %}
+                <div class="detail-card image-card">
+                    <div class="card-title-section">
+                        <h5>📸 Pickup Image</h5>
+                    </div>
+                    <div class="image-container">
+                        <img src="{{ pickup.image.url }}" alt="Pickup Image" class="pickup-image">
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Payment Card -->
+                {% if pickup.status != 'cancelled' %}
+                    {% if payment or pickup.status != 'completed' %}
+                    <div class="detail-card payment-card">
+                        <div class="card-title-section">
+                            <h5>💳 Payment Information</h5>
+                        </div>
+                        <div class="card-detail-body">
+                            {% if payment %}
+                                <div class="detail-item">
+                                    <span class="detail-label">Amount</span>
+                                    <span class="detail-value amount-value">₹{{ payment.amount }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Payment Status</span>
+                                    <span class="detail-value">
+                                        {% if payment.status == 'completed' %}
+                                            <span class="status-badge status-success">✓ Completed</span>
+                                        {% elif payment.status == 'pending' %}
+                                            <span class="status-badge status-warning">⏳ Pending</span>
+                                        {% else %}
+                                            <span class="status-badge status-danger">✗ Failed</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% if payment.status == 'pending' and pickup.status != 'completed' %}
+                                    <div class="payment-action">
+                                        <a href="{% url 'payment' pickup.pk %}" class="btn btn-payment">💰 Pay Now</a>
+                                    </div>
+                                {% elif payment.status == 'completed' %}
+                                    <div class="success-message">
+                                        ✓ Payment completed successfully
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                {% if pickup.status != 'completed' %}
+                                    <p class="text-muted">No payment made yet</p>
+                                    <div class="payment-action">
+                                        <a href="{% url 'payment' pickup.pk %}" class="btn btn-payment">💰 Make Payment</a>
+                                    </div>
+                                {% else %}
+                                    <p class="text-success">✓ No payment required (Completed)</p>
+                                {% endif %}
                             {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <!-- Cancelled Status Card -->
+                    <div class="detail-card cancelled-card">
+                        <div class="card-title-section">
+                            <h5>⚠️ Request Cancelled</h5>
+                        </div>
+                        <div class="card-detail-body">
+                            <div class="cancelled-message">
+                                <p>This request has been cancelled.</p>
+                                <p class="refund-info">💰 Your payment has been refunded.</p>
+                            </div>
                         </div>
                     </div>
                 {% endif %}
             </div>
-            <div class="card-footer">
-                <a href="{% url 'index' %}" class="btn btn-secondary">Back to Dashboard</a>
-            </div>
         </div>
     </div>
+
+    <!-- Action Buttons -->
+    <div class="detail-actions">
+        <a href="{% url 'index' %}" class="btn btn-action btn-secondary">
+            ← Back to Dashboard
+        </a>
+        {% if pickup.status == 'pending' %}
+            <a href="{% url 'request_management' %}" class="btn btn-action btn-info">
+                📋 Manage Requests
+            </a>
+        {% endif %}
+    </div>
 </div>
+
+<style>
+    .pickup-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .pickup-detail-header {
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, var(--cute-secondary, #ff8fb1) 100%);
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 30px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+    }
+
+    .header-content h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.95;
+    }
+
+    .status-badge-large {
+        min-width: 150px;
+    }
+
+    .badge-status {
+        display: inline-block;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: white;
+    }
+
+    .status-confirmed {
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        color: white;
+    }
+
+    .status-completed {
+        background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+        color: white;
+    }
+
+    .status-cancelled {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        color: white;
+    }
+
+    .pickup-detail-content {
+        margin-bottom: 30px;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+        border-left: 4px solid var(--cute-primary, #6c63ff);
+    }
+
+    .card-icon {
+        font-size: 3rem;
+        min-width: 70px;
+    }
+
+    .card-content {
+        flex: 1;
+    }
+
+    .card-label {
+        font-size: 0.9rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+    }
+
+    .card-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .detail-card:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .card-title-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        padding: 20px 25px;
+        border-bottom: 2px solid #eaeaea;
+    }
+
+    .card-title-section h5 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .card-detail-body {
+        padding: 25px;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 15px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #7f8c8d;
+        font-size: 0.95rem;
+        min-width: 150px;
+    }
+
+    .detail-value {
+        color: #2c3e50;
+        text-align: right;
+        flex: 1;
+        padding-left: 20px;
+        font-weight: 500;
+    }
+
+    .waste-type-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--cute-accent-1, #ffd6e0) 0%, var(--cute-accent-3, #e9fbe9) 100%);
+        padding: 8px 16px;
+        border-radius: 20px;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .description-text {
+        text-align: left;
+        font-style: italic;
+        color: #555;
+    }
+
+    .image-container {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .pickup-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .payment-card {
+        background: linear-gradient(135deg, #f0f7ff 0%, #f5e6ff 100%);
+    }
+
+    .amount-value {
+        font-size: 1.8rem;
+        color: var(--cute-primary, #6c63ff);
+        font-weight: 700;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .status-success {
+        background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+        color: white;
+    }
+
+    .status-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: white;
+    }
+
+    .status-danger {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        color: white;
+    }
+
+    .payment-action {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid rgba(108, 99, 255, 0.2);
+    }
+
+    .btn-payment {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, #5b54d9 100%);
+        color: white;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+    }
+
+    .btn-payment:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .success-message {
+        background: linear-gradient(135deg, #e8f6ef 0%, #d4edda 100%);
+        color: #155724;
+        padding: 15px 20px;
+        border-radius: 10px;
+        border-left: 4px solid #28a745;
+        margin-top: 15px;
+        font-weight: 500;
+    }
+
+    .cancelled-card {
+        background: linear-gradient(135deg, #fdeded 0%, #ffe6e6 100%);
+    }
+
+    .cancelled-message {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .cancelled-message p {
+        color: #721c24;
+        font-weight: 500;
+        margin: 10px 0;
+    }
+
+    .refund-info {
+        background: rgba(40, 167, 69, 0.1);
+        padding: 12px 15px;
+        border-radius: 8px;
+        color: #155724;
+    }
+
+    .detail-actions {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        padding-top: 20px;
+        border-top: 2px solid #eaeaea;
+    }
+
+    .btn-action {
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #2c3e50;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+        color: #2c3e50;
+        text-decoration: none;
+    }
+
+    .btn-info {
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        color: white;
+    }
+
+    .btn-info:hover {
+        box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .pickup-detail-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 20px;
+        }
+
+        .header-content h1 {
+            font-size: 1.8rem;
+        }
+
+        .detail-item {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-value {
+            text-align: left;
+            padding-left: 0;
+        }
+
+        .btn-action {
+            flex: 1;
+            min-width: 150px;
+        }
+    }
+</style>
 {% endblock %}

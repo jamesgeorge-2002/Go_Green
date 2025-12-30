@@ -3,41 +3,291 @@
 {% block title %}Feedback - SWCMS{% endblock %}
 
 {% block content %}
-<div class="auth-page row justify-content-center">
-    <div class="col-md-8">
-        <div class="card auth-card">
-            <div class="card-header">
-                <h2 class="mb-0">Submit Feedback</h2>
+<div class="feedback-container">
+    <!-- Header Section -->
+    <div class="feedback-header">
+        <div class="header-content">
+            <h1>💬 Send Your Feedback</h1>
+            <p class="header-subtitle">Help us improve by sharing your thoughts, suggestions, or reporting issues</p>
+        </div>
+    </div>
+
+    <!-- Feedback Form Card -->
+    <div class="feedback-form-wrapper">
+        <div class="feedback-form-card">
+            <div class="card-title-section">
+                <h5>✏️ Feedback Form</h5>
+                <p class="form-subtitle">Please provide detailed feedback to help us serve you better</p>
             </div>
-            <div class="card-body">
-                <form method="post">
+
+            <div class="card-detail-body">
+                <form method="post" class="feedback-form">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="{{ form.subject.id_for_label }}" class="form-label">Subject</label>
-                        {{ form.subject }}
-                        {% if form.subject.errors %}
-                            <div class="text-danger">{{ form.subject.errors }}</div>
-                        {% endif %}
+
+                    <!-- Subject Field -->
+                    <div class="form-group-custom">
+                        <label for="{{ form.subject.id_for_label }}" class="form-label-custom">📌 Subject</label>
+                        <div class="form-input-wrapper">
+                            {{ form.subject }}
+                            {% if form.subject.errors %}
+                                <div class="error-message-custom">{{ form.subject.errors }}</div>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="{{ form.message.id_for_label }}" class="form-label">Message</label>
-                        {{ form.message }}
-                        {% if form.message.errors %}
-                            <div class="text-danger">{{ form.message.errors }}</div>
-                        {% endif %}
+
+                    <!-- Message Field -->
+                    <div class="form-group-custom">
+                        <label for="{{ form.message.id_for_label }}" class="form-label-custom">📝 Message</label>
+                        <div class="form-input-wrapper">
+                            {{ form.message }}
+                            {% if form.message.errors %}
+                                <div class="error-message-custom">{{ form.message.errors }}</div>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <div class="form-check">
+
+                    <!-- Complaint Checkbox -->
+                    <div class="form-check-custom">
+                        <div class="checkbox-wrapper">
                             {{ form.is_complaint }}
-                            <label class="form-check-label" for="{{ form.is_complaint.id_for_label }}">
-                                This is a complaint
+                            <label class="form-check-label-custom" for="{{ form.is_complaint.id_for_label }}">
+                                ⚠️ Mark as complaint
                             </label>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+
+                    <!-- Action Buttons -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-submit-feedback">✓ Submit Feedback</button>
+                        <a href="{% url 'index' %}" class="btn btn-cancel-feedback">← Cancel</a>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .feedback-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .feedback-header {
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, #ff8fb1 100%);
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+    }
+
+    .header-content h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+
+    .feedback-form-wrapper {
+        display: flex;
+        justify-content: center;
+    }
+
+    .feedback-form-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 700px;
+    }
+
+    .card-title-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        padding: 30px;
+        border-bottom: 2px solid #eaeaea;
+    }
+
+    .card-title-section h5 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.3rem;
+    }
+
+    .form-subtitle {
+        margin: 0;
+        color: #7f8c8d;
+        font-size: 0.95rem;
+    }
+
+    .card-detail-body {
+        padding: 40px;
+    }
+
+    .feedback-form {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .form-group-custom {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-label-custom {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1rem;
+        display: block;
+    }
+
+    .form-input-wrapper input,
+    .form-input-wrapper textarea,
+    .form-input-wrapper select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #eaeaea;
+        border-radius: 10px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-input-wrapper input:focus,
+    .form-input-wrapper textarea:focus,
+    .form-input-wrapper select:focus {
+        outline: none;
+        border-color: var(--cute-primary, #6c63ff);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        background: white;
+    }
+
+    .form-input-wrapper textarea {
+        min-height: 150px;
+        resize: vertical;
+        font-size: 0.95rem;
+    }
+
+    .error-message-custom {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 5px;
+        padding: 8px 12px;
+        background: #fdeded;
+        border-left: 3px solid #dc3545;
+        border-radius: 4px;
+    }
+
+    .form-check-custom {
+        padding: 15px;
+        background: linear-gradient(135deg, var(--cute-accent-1, #ffd6e0) 0%, var(--cute-accent-2, #d6f0ff) 100%);
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--cute-primary, #6c63ff);
+    }
+
+    .form-check-label-custom {
+        font-weight: 500;
+        color: #2c3e50;
+        cursor: pointer;
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 15px;
+        padding-top: 20px;
+        border-top: 2px solid #eaeaea;
+    }
+
+    .btn-submit-feedback,
+    .btn-cancel-feedback {
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        flex: 1;
+        text-align: center;
+    }
+
+    .btn-submit-feedback {
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, #5b54d9 100%);
+        color: white;
+        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+    }
+
+    .btn-submit-feedback:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-cancel-feedback {
+        background: #e0e0e0;
+        color: #2c3e50;
+    }
+
+    .btn-cancel-feedback:hover {
+        background: #d0d0d0;
+        color: #2c3e50;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .feedback-header {
+            padding: 30px 20px;
+        }
+
+        .header-content h1 {
+            font-size: 1.8rem;
+        }
+
+        .card-title-section {
+            padding: 20px;
+        }
+
+        .card-detail-body {
+            padding: 25px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-submit-feedback,
+        .btn-cancel-feedback {
+            width: 100%;
+        }
+    }
+</style>
 {% endblock %}

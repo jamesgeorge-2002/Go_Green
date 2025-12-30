@@ -1,0 +1,364 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Edit Profile - SWCMS{% endblock %}
+
+{% block content %}
+<div class="profile-edit-container">
+    <!-- Header Section -->
+    <div class="profile-edit-header">
+        <div class="header-content">
+            <h1>👤 Edit Your Profile</h1>
+            <p class="header-subtitle">Update your personal information and contact details</p>
+        </div>
+    </div>
+
+    <!-- Edit Profile Form Card -->
+    <div class="profile-form-wrapper">
+        <div class="profile-form-card">
+            <div class="card-title-section">
+                <h5>✏️ Profile Information</h5>
+                <p class="form-subtitle">Keep your profile information up to date</p>
+            </div>
+
+            <div class="card-detail-body">
+                <form method="post" class="profile-form">
+                    {% csrf_token %}
+
+                    <!-- Account Information Section -->
+                    <div class="form-section">
+                        <h6 class="section-title">📧 Account Information</h6>
+                        
+                        <!-- Email Field -->
+                        <div class="form-group-custom">
+                            <label for="{{ user_form.email.id_for_label }}" class="form-label-custom">📧 Email Address</label>
+                            <div class="form-input-wrapper">
+                                {{ user_form.email }}
+                                {% if user_form.email.errors %}
+                                    <div class="error-message-custom">{{ user_form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- First Name Field -->
+                        <div class="form-group-custom">
+                            <label for="{{ user_form.first_name.id_for_label }}" class="form-label-custom">👤 First Name</label>
+                            <div class="form-input-wrapper">
+                                {{ user_form.first_name }}
+                                {% if user_form.first_name.errors %}
+                                    <div class="error-message-custom">{{ user_form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Last Name Field -->
+                        <div class="form-group-custom">
+                            <label for="{{ user_form.last_name.id_for_label }}" class="form-label-custom">👤 Last Name</label>
+                            <div class="form-input-wrapper">
+                                {{ user_form.last_name }}
+                                {% if user_form.last_name.errors %}
+                                    <div class="error-message-custom">{{ user_form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="form-divider">
+
+                    <!-- Contact Information Section -->
+                    <div class="form-section">
+                        <h6 class="section-title">📞 Contact Information</h6>
+                        
+                        <!-- Mobile Number Field -->
+                        <div class="form-group-custom">
+                            <label for="{{ profile_form.mobile_number.id_for_label }}" class="form-label-custom">📱 Mobile Number</label>
+                            <div class="form-input-wrapper">
+                                {{ profile_form.mobile_number }}
+                                {% if profile_form.mobile_number.errors %}
+                                    <div class="error-message-custom">{{ profile_form.mobile_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Location Field -->
+                        <div class="form-group-custom">
+                            <label for="{{ profile_form.location.id_for_label }}" class="form-label-custom">📍 Location</label>
+                            <div class="form-input-wrapper">
+                                {{ profile_form.location }}
+                                {% if profile_form.location.errors %}
+                                    <div class="error-message-custom">{{ profile_form.location.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Ward Field -->
+                        <div class="form-group-custom">
+                            <label for="{{ profile_form.ward.id_for_label }}" class="form-label-custom">🏘️ Ward</label>
+                            <div class="form-input-wrapper">
+                                {{ profile_form.ward }}
+                                {% if profile_form.ward.errors %}
+                                    <div class="error-message-custom">{{ profile_form.ward.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Status Section -->
+                    <div class="info-box">
+                        <h6>ℹ️ Account Status</h6>
+                        <p><strong>Role:</strong> <span class="role-badge">{{ profile.get_role_display }}</span></p>
+                        <p><strong>Username:</strong> {{ user.username }}</p>
+                        <p><strong>Member Since:</strong> {{ user.date_joined|date:"d M, Y" }}</p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-save-profile">✓ Save Changes</button>
+                        <a href="{% url 'index' %}" class="btn btn-cancel-profile">← Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-edit-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .profile-edit-header {
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, #ff8fb1 100%);
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+    }
+
+    .header-content h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+
+    .profile-form-wrapper {
+        display: flex;
+        justify-content: center;
+    }
+
+    .profile-form-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 700px;
+    }
+
+    .card-title-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        padding: 30px;
+        border-bottom: 2px solid #eaeaea;
+    }
+
+    .card-title-section h5 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.3rem;
+    }
+
+    .form-subtitle {
+        margin: 0;
+        color: #7f8c8d;
+        font-size: 0.95rem;
+    }
+
+    .card-detail-body {
+        padding: 40px;
+    }
+
+    .profile-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-section {
+        padding: 20px 0;
+    }
+
+    .section-title {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--cute-primary, #6c63ff);
+        display: inline-block;
+    }
+
+    .form-group-custom {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .form-label-custom {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1rem;
+        display: block;
+    }
+
+    .form-input-wrapper input,
+    .form-input-wrapper select,
+    .form-input-wrapper textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #eaeaea;
+        border-radius: 10px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-input-wrapper input:focus,
+    .form-input-wrapper select:focus,
+    .form-input-wrapper textarea:focus {
+        outline: none;
+        border-color: var(--cute-primary, #6c63ff);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        background: white;
+    }
+
+    .error-message-custom {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 5px;
+        padding: 8px 12px;
+        background: #fdeded;
+        border-left: 3px solid #dc3545;
+        border-radius: 4px;
+    }
+
+    .form-divider {
+        border: none;
+        border-top: 2px solid #eaeaea;
+        margin: 20px 0;
+    }
+
+    .info-box {
+        padding: 20px;
+        background: linear-gradient(135deg, var(--cute-accent-2, #d6f0ff) 0%, var(--cute-accent-3, #e9fbe9) 100%);
+        border-radius: 12px;
+        border-left: 4px solid var(--cute-primary, #6c63ff);
+        margin: 20px 0;
+    }
+
+    .info-box h6 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .info-box p {
+        margin: 8px 0;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
+    .role-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, #5b54d9 100%);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid #eaeaea;
+    }
+
+    .btn-save-profile,
+    .btn-cancel-profile {
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        flex: 1;
+        text-align: center;
+    }
+
+    .btn-save-profile {
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, #5b54d9 100%);
+        color: white;
+        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+    }
+
+    .btn-save-profile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-cancel-profile {
+        background: #e0e0e0;
+        color: #2c3e50;
+    }
+
+    .btn-cancel-profile:hover {
+        background: #d0d0d0;
+        color: #2c3e50;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .profile-edit-header {
+            padding: 30px 20px;
+        }
+
+        .header-content h1 {
+            font-size: 1.8rem;
+        }
+
+        .card-detail-body {
+            padding: 25px;
+        }
+
+        .card-title-section {
+            padding: 20px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-save-profile,
+        .btn-cancel-profile {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}

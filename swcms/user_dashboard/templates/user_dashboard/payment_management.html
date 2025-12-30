@@ -1,0 +1,63 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Payment Management - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-header">
+        <h1>Payment Management</h1>
+        <p class="lead">View and manage your payment orders.</p>
+    </div>
+
+    {% if payments %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Request ID</th>
+                        <th>Waste Type</th>
+                        <th>Amount (₹)</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.id }}</td>
+                            <td>{{ payment.pickup_request.request_id.hex|slice:":8" }}</td>
+                            <td>{{ payment.pickup_request.get_waste_type_display }}</td>
+                            <td>{{ payment.amount }}</td>
+                            <td>
+                                {% if payment.pickup_request.status == 'cancelled' %}
+                                    <span class="badge bg-info">Refunded</span>
+                                {% else %}
+                                    <span class="badge {% if payment.status == 'completed' %}bg-success{% elif payment.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ payment.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ payment.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'pickup_detail' payment.pickup_request.pk %}" class="btn btn-sm btn-primary">View Request</a>
+                                {% if payment.status == 'pending' and payment.pickup_request.status != 'completed' and payment.pickup_request.status != 'cancelled' %}
+                                    <a href="{% url 'payment' payment.pickup_request.pk %}" class="btn btn-sm btn-warning">Pay Now</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No payments found. Start by requesting a waste pickup.</div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'request_management' %}" class="btn btn-primary">View Requests</a>
+        <a href="{% url 'index' %}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

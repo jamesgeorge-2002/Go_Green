@@ -6,9 +6,10 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db.models import Sum, Q
 from django.db import transaction
+from django.conf import settings
 from decimal import Decimal
 from collections import defaultdict
-from .forms import UserRegistrationForm, WorkerRegistrationForm, AdminRegistrationForm, LoginForm, PickupRequestForm, FeedbackForm, WasteWeightForm
+from .forms import UserRegistrationForm, WorkerRegistrationForm, AdminRegistrationForm, LoginForm, PickupRequestForm, FeedbackForm, WasteWeightForm, UserProfileEditForm, ProfileEditForm
 from .models import PickupRequest, Reward, Profile, Ward, Payment, Feedback
 
 # Decorator for role-based access
@@ -126,6 +127,35 @@ def logout_view(request):
     return redirect('login')
 
 @login_required
+def edit_profile_view(request):
+    """Allow users to edit their profile information"""
+    try:
+        profile = Profile.objects.get(user=request.user)
+    except Profile.DoesNotExist:
+        messages.error(request, "Profile not found.")
+        return redirect('index')
+
+    if request.method == 'POST':
+        user_form = UserProfileEditForm(request.POST, instance=request.user)
+        profile_form = ProfileEditForm(request.POST, instance=profile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('index')
+    else:
+        user_form = UserProfileEditForm(instance=request.user)
+        profile_form = ProfileEditForm(instance=profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'profile': profile,
+    }
+    return render(request, 'user_dashboard/edit_profile.html', context)
+
+@login_required
 def request_pickup_view(request):
     if request.method == 'POST':
         form = PickupRequestForm(request.POST, request.FILES)
@@ -134,7 +164,7 @@ def request_pickup_view(request):
             pickup.user = request.user
             pickup.save()
             messages.success(request, 'Pickup request submitted successfully.')
-            return redirect('index')
+            return redirect('payment', pk=pickup.pk)
     else:
         form = PickupRequestForm()
     return render(request, 'user_dashboard/request_pickup.html', {'form': form})
@@ -142,18 +172,48 @@ def request_pickup_view(request):
 @login_required
 def pickup_detail_view(request, pk):
     pickup = get_object_or_404(PickupRequest, pk=pk, user=request.user)
-    return render(request, 'user_dashboard/pickup_detail.html', {'pickup': pickup})
+    try:
+        payment = pickup.payment
+    except Payment.DoesNotExist:
+        payment = None
+    return render(request, 'user_dashboard/pickup_detail.html', {'pickup': pickup, 'payment': payment})
 
 @login_required
 def payment_view(request, pk):
     pickup = get_object_or_404(PickupRequest, pk=pk, user=request.user)
-    # Assuming payment logic here, for now just render
-    return render(request, 'user_dashboard/payment.html', {'pickup': pickup})
+    
+    # Get or create payment record
+    payment, created = Payment.objects.get_or_create(
+        pickup_request=pickup,
+        user=request.user,
+        defaults={'amount': Decimal('100.00')}  # Default amount, adjust as needed
+    )
+    
+    # Context data for Razorpay
+    context = {
+        'pickup': pickup,
+        'payment': payment,
+        'amount': int(payment.amount * 100),  # Razorpay expects amount in paise
+        'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+        'order_id': payment.razorpay_order_id or '',
+        'user': request.user,
+    }
+    return render(request, 'user_dashboard/payment.html', context)
 
 @login_required
 def request_management_view(request):
     pickups = PickupRequest.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'user_dashboard/request_management.html', {'pickups': pickups})
+
+    # Fetch payments for these pickups and map by pickup pk
+    payments = Payment.objects.filter(user=request.user, pickup_request__in=pickups)
+    payment_map = {p.pickup_request_id: p for p in payments}
+
+    # Build rows with pickup and optional payment to avoid template related-object errors
+    rows = []
+    for p in pickups:
+        rows.append({'pickup': p, 'payment': payment_map.get(p.pk)})
+
+    return render(request, 'user_dashboard/request_management.html', {'rows': rows})
 
 @login_required
 def cancel_request_view(request, pk):
@@ -162,9 +222,18 @@ def cancel_request_view(request, pk):
         pickup.status = 'cancelled'
         pickup.save()
         messages.success(request, 'Request cancelled.')
+    elif pickup.status == 'completed':
+        messages.error(request, 'Cannot cancel completed requests.')
+    elif pickup.status == 'picked':
+        messages.error(request, 'Cannot cancel requests that are already picked up.')
     else:
-        messages.error(request, 'Cannot cancel this request.')
+        messages.error(request, 'Cannot cancel this request in its current status.')
     return redirect('request_management')
+
+@login_required
+def payment_management_view(request):
+    payments = Payment.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'user_dashboard/payment_management.html', {'payments': payments})
 
 @login_required
 def feedback_view(request):

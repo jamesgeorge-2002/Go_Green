@@ -10,8 +10,7 @@ class UserRegistrationForm(forms.ModelForm):
     mobile_number = forms.CharField(max_length=15, required=False)
     location = forms.CharField(max_length=255)
     panchayat_municipality = forms.ChoiceField(choices=Ward.panchayat_municipality_choices)
-    ward_name = forms.CharField(max_length=100)
-    ward_number = forms.IntegerField()
+    ward = forms.ModelChoiceField(queryset=Ward.objects.all(), required=True, label="Select Ward")
 
     class Meta:
         model = User
@@ -36,15 +35,7 @@ class UserRegistrationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
-            # Create or get Ward
-            panchayat_municipality = self.cleaned_data.get('panchayat_municipality')
-            ward_name = self.cleaned_data.get('ward_name')
-            ward_number = self.cleaned_data.get('ward_number')
-            ward, created = Ward.objects.get_or_create(
-                name=ward_name,
-                panchayat_municipality=panchayat_municipality,
-                ward_number=ward_number
-            )
+            ward = self.cleaned_data.get('ward')
             Profile.objects.get_or_create(
                 user=user,
                 defaults={
@@ -63,8 +54,7 @@ class WorkerRegistrationForm(forms.ModelForm):
     mobile_number = forms.CharField(max_length=15, required=False)
     location = forms.CharField(max_length=255)
     panchayat_municipality = forms.ChoiceField(choices=Ward.panchayat_municipality_choices)
-    ward_name = forms.CharField(max_length=100)
-    ward_number = forms.IntegerField()
+    ward = forms.ModelChoiceField(queryset=Ward.objects.all(), required=True, label="Select Ward")
 
     class Meta:
         model = User
@@ -89,15 +79,7 @@ class WorkerRegistrationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
-            # Create or get Ward and attach to worker profile
-            panchayat_municipality = self.cleaned_data.get('panchayat_municipality')
-            ward_name = self.cleaned_data.get('ward_name')
-            ward_number = self.cleaned_data.get('ward_number')
-            ward, created = Ward.objects.get_or_create(
-                name=ward_name,
-                panchayat_municipality=panchayat_municipality,
-                ward_number=ward_number
-            )
+            ward = self.cleaned_data.get('ward')
             Profile.objects.get_or_create(
                 user=user,
                 defaults={
@@ -115,8 +97,7 @@ class AdminRegistrationForm(forms.ModelForm):
     mobile_number = forms.CharField(max_length=15, required=False)
     location = forms.CharField(max_length=255)
     panchayat_municipality = forms.ChoiceField(choices=Ward.panchayat_municipality_choices)
-    ward_name = forms.CharField(max_length=100)
-    ward_number = forms.IntegerField()
+    ward = forms.ModelChoiceField(queryset=Ward.objects.all(), required=True, label="Select Ward")
 
     class Meta:
         model = User
@@ -141,15 +122,7 @@ class AdminRegistrationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
-            # Create or get Ward and attach to admin profile
-            panchayat_municipality = self.cleaned_data.get('panchayat_municipality')
-            ward_name = self.cleaned_data.get('ward_name')
-            ward_number = self.cleaned_data.get('ward_number')
-            ward, created = Ward.objects.get_or_create(
-                name=ward_name,
-                panchayat_municipality=panchayat_municipality,
-                ward_number=ward_number
-            )
+            ward = self.cleaned_data.get('ward')
             Profile.objects.get_or_create(
                 user=user,
                 defaults={
@@ -188,6 +161,16 @@ class PickupRequestForm(forms.ModelForm):
                 raise ValidationError("Schedule date must be today or in the future.")
         return schedule_date_time
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Apply consistent form classes for templates
+        self.fields['waste_type'].widget.attrs.update({'class': 'form-select form-control'})
+        self.fields['schedule_date_time'].widget.attrs.update({'class': 'form-control'})
+        self.fields['description'].widget.attrs.update({'class': 'form-control'})
+        # File input
+        if 'image' in self.fields:
+            self.fields['image'].widget.attrs.update({'class': 'form-control'})
+
 class FeedbackForm(forms.ModelForm):
     class Meta:
         model = Feedback
@@ -204,3 +187,21 @@ class WasteWeightForm(forms.Form):
         help_text="Enter weight in kg",
         widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'})
     )
+class UserProfileEditForm(forms.ModelForm):
+    email = forms.EmailField(required=True)
+    first_name = forms.CharField(max_length=150, required=False, label="First Name")
+    last_name = forms.CharField(max_length=150, required=False, label="Last Name")
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name']
+
+class ProfileEditForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['mobile_number', 'location', 'ward']
+        widgets = {
+            'mobile_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}),
+            'ward': forms.Select(attrs={'class': 'form-select'}),
+        }

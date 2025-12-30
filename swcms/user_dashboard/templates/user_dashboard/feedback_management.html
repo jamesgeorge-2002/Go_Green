@@ -3,57 +3,352 @@
 {% block title %}Feedback Management - SWCMS{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="mb-0">Feedback Management</h2>
-            </div>
-            <div class="card-body">
+<div class="feedback-mgmt-container">
+    <!-- Header Section -->
+    <div class="feedback-mgmt-header">
+        <div class="header-content">
+            <h1>💌 Feedback Management</h1>
+            <p class="header-subtitle">Review, manage, and resolve user feedback and complaints</p>
+        </div>
+    </div>
+
+    <!-- Feedback List -->
+    <div class="feedback-list-card">
+        <div class="card-title-section">
+            <div class="title-with-icon">
+                <h5>📋 All Feedback Items</h5>
                 {% if feedbacks %}
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>User</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for feedback in feedbacks %}
-                                    <tr>
-                                        <td>{{ feedback.subject }}</td>
-                                        <td>{{ feedback.user.username }}</td>
-                                        <td>
-                                            {% if feedback.is_complaint %}
-                                                <span class="badge bg-danger">Complaint</span>
-                                            {% else %}
-                                                <span class="badge bg-info">Feedback</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-{{ feedback.status|lower }}">{{ feedback.get_status_display }}</span>
-                                        </td>
-                                        <td>{{ feedback.created_at|date:"M d, Y H:i" }}</td>
-                                        <td>
-                                            {% if feedback.status == 'pending' %}
-                                                <a href="{% url 'resolve_feedback' feedback.pk %}" class="btn btn-sm btn-success">Resolve</a>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="text-muted">No feedback available.</p>
+                    <span class="feedback-count">{{ feedbacks|length }}</span>
                 {% endif %}
             </div>
         </div>
+
+        <div class="card-detail-body">
+            {% if feedbacks %}
+                <div class="feedback-items-grid">
+                    {% for feedback in feedbacks %}
+                        <div class="feedback-item">
+                            <div class="feedback-item-header">
+                                <div class="feedback-subject">
+                                    <h6>{{ feedback.subject }}</h6>
+                                </div>
+                                <div class="feedback-badges">
+                                    {% if feedback.is_complaint %}
+                                        <span class="badge badge-complaint">⚠️ Complaint</span>
+                                    {% else %}
+                                        <span class="badge badge-feedback">💬 Feedback</span>
+                                    {% endif %}
+                                    <span class="badge {% if feedback.status == 'pending' %}badge-pending{% elif feedback.status == 'resolved' %}badge-resolved{% else %}badge-unknown{% endif %}">
+                                        {% if feedback.status == 'pending' %}
+                                            ⏳ Pending
+                                        {% elif feedback.status == 'resolved' %}
+                                            ✓ Resolved
+                                        {% else %}
+                                            {{ feedback.get_status_display }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="feedback-item-body">
+                                <div class="feedback-detail-row">
+                                    <span class="detail-label">👤 From:</span>
+                                    <span class="detail-value">{{ feedback.user.username }}</span>
+                                </div>
+                                <div class="feedback-detail-row">
+                                    <span class="detail-label">📅 Created:</span>
+                                    <span class="detail-value">{{ feedback.created_at|date:"d M, Y H:i" }}</span>
+                                </div>
+                            </div>
+
+                            {% if feedback.status == 'pending' %}
+                                <div class="feedback-item-action">
+                                    <a href="{% url 'resolve_feedback' feedback.pk %}" class="btn btn-resolve-feedback">✓ Mark as Resolved</a>
+                                </div>
+                            {% else %}
+                                <div class="feedback-item-action resolved">
+                                    <span class="resolved-label">✓ Already Resolved</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state-custom">
+                    <div class="empty-icon">📭</div>
+                    <h5>No Feedback Available</h5>
+                    <p>There are currently no feedback items to review.</p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
+
+<style>
+    .feedback-mgmt-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .feedback-mgmt-header {
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, #ff8fb1 100%);
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+    }
+
+    .header-content h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+
+    .feedback-list-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-title-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        padding: 25px 30px;
+        border-bottom: 2px solid #eaeaea;
+    }
+
+    .title-with-icon {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .title-with-icon h5 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.3rem;
+    }
+
+    .feedback-count {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--cute-primary, #6c63ff) 0%, #5b54d9 100%);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .card-detail-body {
+        padding: 30px;
+    }
+
+    .feedback-items-grid {
+        display: grid;
+        gap: 20px;
+    }
+
+    .feedback-item {
+        border: 2px solid #eaeaea;
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .feedback-item:hover {
+        border-color: var(--cute-primary, #6c63ff);
+        box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .feedback-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        gap: 15px;
+    }
+
+    .feedback-subject h6 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .feedback-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .badge-complaint {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        color: white;
+    }
+
+    .badge-feedback {
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        color: white;
+    }
+
+    .badge-pending {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: white;
+    }
+
+    .badge-resolved {
+        background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+        color: white;
+    }
+
+    .badge-unknown {
+        background: #e0e0e0;
+        color: #666;
+    }
+
+    .feedback-item-body {
+        padding: 15px 0;
+        border-top: 1px solid #eaeaea;
+        border-bottom: 1px solid #eaeaea;
+        margin: 15px 0;
+    }
+
+    .feedback-detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        font-size: 0.95rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #7f8c8d;
+        min-width: 80px;
+    }
+
+    .detail-value {
+        color: #2c3e50;
+        text-align: right;
+        flex: 1;
+        padding-left: 15px;
+    }
+
+    .feedback-item-action {
+        margin-top: 15px;
+    }
+
+    .btn-resolve-feedback {
+        display: inline-block;
+        background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+        color: white;
+        padding: 10px 24px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+    }
+
+    .btn-resolve-feedback:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .feedback-item-action.resolved {
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #e8f6ef 0%, #d4edda 100%);
+        border-radius: 10px;
+        border-left: 4px solid #28a745;
+    }
+
+    .resolved-label {
+        color: #155724;
+        font-weight: 600;
+        display: block;
+        text-align: center;
+    }
+
+    .empty-state-custom {
+        text-align: center;
+        padding: 60px 30px;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+
+    .empty-state-custom h5 {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+
+    .empty-state-custom p {
+        color: #7f8c8d;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .feedback-mgmt-header {
+            padding: 30px 20px;
+        }
+
+        .header-content h1 {
+            font-size: 1.8rem;
+        }
+
+        .feedback-item-header {
+            flex-direction: column;
+        }
+
+        .feedback-badges {
+            justify-content: flex-start;
+        }
+
+        .feedback-detail-row {
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .detail-label {
+            text-align: left;
+        }
+
+        .detail-value {
+            text-align: left;
+            padding-left: 0;
+        }
+    }
+</style>
 {% endblock %}

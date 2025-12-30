@@ -1,96 +1,555 @@
 {% extends 'user_dashboard/base.html' %}
 
-{% block title %}Register - SWCMS{% endblock %}
+{% block title %}Create Account - SWCMS{% endblock %}
 
 {% block content %}
-<div class="auth-page row justify-content-center">
-    <div class="col-md-10">
+<style>
+    /* Register Page Specific Styles */
+    .auth-page {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        padding: 40px 0;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    }
+
+    .auth-container {
+        max-width: 900px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .auth-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .auth-card:hover {
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    }
+
+    .auth-card .card-header {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white;
+        padding: 40px 30px;
+        border-bottom: none;
+        text-align: center;
+    }
+
+    .auth-card .card-header h2 {
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+    }
+
+    .auth-card .card-header p {
+        font-size: 0.95rem;
+        opacity: 0.95;
+        margin-bottom: 0;
+    }
+
+    .auth-card .card-body {
+        padding: 40px;
+    }
+
+    /* Form Section Headers */
+    .form-section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6b7280;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .form-section-title:first-child {
+        margin-top: 0;
+    }
+
+    /* Form Label */
+    .form-label {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        display: block;
+    }
+
+    .form-label .required {
+        color: #dc2626;
+    }
+
+    /* Form Controls */
+    .form-control,
+    .form-select {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background-color: #f9fafb;
+        color: #1f2937;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        background-color: white;
+        outline: none;
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    /* Error Messages */
+    .error-message {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: block;
+        font-weight: 500;
+    }
+
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc2626;
+    }
+
+    .form-control.is-invalid:focus,
+    .form-select.is-invalid:focus {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+
+    /* Row spacing */
+    .form-row {
+        margin-bottom: 0;
+    }
+
+    .form-row > div {
+        margin-bottom: 20px;
+    }
+
+    /* Submit Button */
+    .btn-submit-auth {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .btn-submit-auth:hover {
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        transform: translateY(-1px);
+        color: white;
+    }
+
+    .btn-submit-auth:active {
+        transform: translateY(0);
+    }
+
+    /* Card Footer */
+    .auth-card .card-footer {
+        background-color: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        padding: 24px 30px;
+        text-align: center;
+    }
+
+    .auth-card .card-footer p {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        color: #4b5563;
+    }
+
+    .auth-card .card-footer a {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .auth-card .card-footer a:hover {
+        color: #1e40af;
+        text-decoration: underline;
+    }
+
+    /* Progress Steps */
+    .registration-steps {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 0;
+        list-style: none;
+        padding: 0;
+    }
+
+    .step {
+        flex: 1;
+        height: 4px;
+        background-color: #e5e7eb;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .step.active {
+        background-color: #2563eb;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .auth-card .card-header {
+            padding: 30px 20px;
+        }
+
+        .auth-card .card-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .auth-card .card-body {
+            padding: 24px;
+        }
+
+        .form-row .col-md-6 {
+            width: 100% !important;
+        }
+
+        .btn-submit-auth {
+            padding: 11px 20px;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .auth-page {
+            padding: 20px 0;
+        }
+
+        .auth-card .card-header {
+            padding: 25px 15px;
+        }
+
+        .auth-card .card-header h2 {
+            font-size: 1.3rem;
+        }
+
+        .auth-card .card-body {
+            padding: 20px;
+        }
+
+        .auth-card .card-footer {
+            padding: 20px 15px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+        }
+    }
+</style>
+
+<div class="auth-page">
+    <div class="auth-container">
         <div class="card auth-card">
-            <div class="card-header text-center">
-                <h2 class="mb-0">Create Account</h2>
-                <p class="text-muted mb-0">Join our waste management community</p>
+            <div class="card-header">
+                <h2>🌱 Create Your Account</h2>
+                <p>Join our waste management community and earn rewards</p>
             </div>
+
             <div class="card-body">
-                <form method="post">
+                <form method="post" novalidate>
                     {% csrf_token %}
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
-                            {{ form.username }}
-                            {% if form.username.errors %}
-                                <div class="text-danger">{{ form.username.errors }}</div>
-                            {% endif %}
+
+                    <!-- Account Information Section -->
+                    <h6 class="form-section-title">Account Information</h6>
+
+                    <div class="row form-row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.username.id_for_label }}" class="form-label">
+                                    👤 Username <span class="required">*</span>
+                                </label>
+                                <input type="text" 
+                                    class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                                    id="{{ form.username.id_for_label }}"
+                                    name="username"
+                                    placeholder="Choose a unique username"
+                                    value="{{ form.username.value|default:'' }}"
+                                    required>
+                                {% if form.username.errors %}
+                                    <span class="error-message">{{ form.username.errors.0 }}</span>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
-                            {{ form.email }}
-                            {% if form.email.errors %}
-                                <div class="text-danger">{{ form.email.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
-                            {{ form.password }}
-                            {% if form.password.errors %}
-                                <div class="text-danger">{{ form.password.errors }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.confirm_password.id_for_label }}" class="form-label">Confirm Password</label>
-                            {{ form.confirm_password }}
-                            {% if form.confirm_password.errors %}
-                                <div class="text-danger">{{ form.confirm_password.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.mobile_number.id_for_label }}" class="form-label">Phone (Optional)</label>
-                            {{ form.mobile_number }}
-                            {% if form.mobile_number.errors %}
-                                <div class="text-danger">{{ form.mobile_number.errors }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.panchayat_municipality.id_for_label }}" class="form-label">Panchayat/Municipality</label>
-                            {{ form.panchayat_municipality }}
-                            {% if form.panchayat_municipality.errors %}
-                                <div class="text-danger">{{ form.panchayat_municipality.errors }}</div>
-                            {% endif %}
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    ✉️ Email Address <span class="required">*</span>
+                                </label>
+                                <input type="email" 
+                                    class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                                    id="{{ form.email.id_for_label }}"
+                                    name="email"
+                                    placeholder="your@email.com"
+                                    value="{{ form.email.value|default:'' }}"
+                                    required>
+                                {% if form.email.errors %}
+                                    <span class="error-message">{{ form.email.errors.0 }}</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.ward_name.id_for_label }}" class="form-label">Ward Name</label>
-                            {{ form.ward_name }}
-                            {% if form.ward_name.errors %}
-                                <div class="text-danger">{{ form.ward_name.errors }}</div>
-                            {% endif %}
+
+                    <div class="row form-row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.password.id_for_label }}" class="form-label">
+                                    🔐 Password <span class="required">*</span>
+                                </label>
+                                <input type="password" 
+                                    class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                                    id="{{ form.password.id_for_label }}"
+                                    name="password"
+                                    placeholder="Min. 8 characters"
+                                    required>
+                                {% if form.password.errors %}
+                                    <span class="error-message">{{ form.password.errors.0 }}</span>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.ward_number.id_for_label }}" class="form-label">Ward Number</label>
-                            {{ form.ward_number }}
-                            {% if form.ward_number.errors %}
-                                <div class="text-danger">{{ form.ward_number.errors }}</div>
-                            {% endif %}
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.confirm_password.id_for_label }}" class="form-label">
+                                    🔐 Confirm Password <span class="required">*</span>
+                                </label>
+                                <input type="password" 
+                                    class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}"
+                                    id="{{ form.confirm_password.id_for_label }}"
+                                    name="confirm_password"
+                                    placeholder="Re-enter password"
+                                    required>
+                                {% if form.confirm_password.errors %}
+                                    <span class="error-message">{{ form.confirm_password.errors.0 }}</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
-                        {{ form.location }}
+
+                    <!-- Contact Information Section -->
+                    <h6 class="form-section-title">Contact Information</h6>
+
+                    <div class="row form-row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.mobile_number.id_for_label }}" class="form-label">
+                                    📱 Phone Number <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input type="tel" 
+                                    class="form-control {% if form.mobile_number.errors %}is-invalid{% endif %}"
+                                    id="{{ form.mobile_number.id_for_label }}"
+                                    name="mobile_number"
+                                    placeholder="10-digit mobile number"
+                                    value="{{ form.mobile_number.value|default:'' }}">
+                                {% if form.mobile_number.errors %}
+                                    <span class="error-message">{{ form.mobile_number.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.panchayat_municipality.id_for_label }}" class="form-label">
+                                    🏛️ Panchayat/Municipality <span class="required">*</span>
+                                </label>
+                                <select class="form-select {% if form.panchayat_municipality.errors %}is-invalid{% endif %}"
+                                    id="{{ form.panchayat_municipality.id_for_label }}"
+                                    name="panchayat_municipality"
+                                    required>
+                                    <option value="">-- Select --</option>
+                                    {% for value, label in form.panchayat_municipality.field.choices %}
+                                        {% if value %}
+                                            <option value="{{ value }}" {% if form.panchayat_municipality.value == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                {% if form.panchayat_municipality.errors %}
+                                    <span class="error-message">{{ form.panchayat_municipality.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Information Section -->
+                    <h6 class="form-section-title">Location Details</h6>
+
+                    <div class="row form-row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.panchayat_municipality.id_for_label }}" class="form-label">
+                                    🏛️ Panchayat/Municipality <span class="required">*</span>
+                                </label>
+                                <select class="form-select {% if form.panchayat_municipality.errors %}is-invalid{% endif %}"
+                                    id="{{ form.panchayat_municipality.id_for_label }}"
+                                    name="panchayat_municipality"
+                                    required>
+                                    <option value="">-- Select --</option>
+                                    {% for value, label in form.panchayat_municipality.field.choices %}
+                                        {% if value %}
+                                            <option value="{{ value }}" {% if form.panchayat_municipality.value == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                {% if form.panchayat_municipality.errors %}
+                                    <span class="error-message">{{ form.panchayat_municipality.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_ward" class="form-label">
+                                    📍 Select Ward <span class="required">*</span>
+                                </label>
+                                <select class="form-select {% if form.ward.errors %}is-invalid{% endif %}"
+                                    id="id_ward"
+                                    name="ward"
+                                    required>
+                                    <option value="">-- Select Panchayat First --</option>
+                                    {% for ward in form.ward.field.queryset %}
+                                        <option value="{{ ward.id }}" 
+                                            data-panchayat="{{ ward.panchayat_municipality }}"
+                                            {% if form.ward.value == ward.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ ward.name }} (Ward #{{ ward.ward_number }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.ward.errors %}
+                                    <span class="error-message">{{ form.ward.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.location.id_for_label }}" class="form-label">
+                            🗺️ Full Address <span class="required">*</span>
+                        </label>
+                        <textarea class="form-control {% if form.location.errors %}is-invalid{% endif %}"
+                            id="{{ form.location.id_for_label }}"
+                            name="location"
+                            placeholder="Enter your complete address"
+                            rows="3"
+                            required>{{ form.location.value|default:'' }}</textarea>
                         {% if form.location.errors %}
-                            <div class="text-danger">{{ form.location.errors }}</div>
+                            <span class="error-message">{{ form.location.errors.0 }}</span>
                         {% endif %}
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Create Account</button>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-submit-auth">
+                        ✓ Create Account
+                    </button>
                 </form>
             </div>
-            <div class="card-footer text-center">
-                <p class="mb-0">Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+
+            <div class="card-footer">
+                <p>Already have an account? <a href="{% url 'login' %}">Sign in here</a></p>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Add real-time validation feedback
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('.form-control, .form-select');
+
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+
+            input.addEventListener('focus', function() {
+                this.classList.remove('is-invalid');
+            });
+        });
+
+        // Dependent dropdown for Ward based on Panchayat/Municipality
+        const panchayatSelect = document.getElementById('id_panchayat_municipality');
+        const wardSelect = document.getElementById('id_ward');
+        const allWards = Array.from(wardSelect.options).slice(1); // Skip the first option
+
+        panchayatSelect.addEventListener('change', function() {
+            const selectedPanchayat = this.value;
+            
+            // Clear current ward options except the first one
+            while (wardSelect.options.length > 1) {
+                wardSelect.remove(1);
+            }
+
+            if (!selectedPanchayat) {
+                wardSelect.innerHTML = '<option value="">-- Select Panchayat First --</option>';
+                wardSelect.disabled = true;
+                return;
+            }
+
+            // Add filtered wards
+            const filteredWards = allWards.filter(option => {
+                return option.dataset.panchayat === selectedPanchayat;
+            });
+
+            if (filteredWards.length === 0) {
+                wardSelect.innerHTML = '<option value="">No wards available for this panchayat</option>';
+                wardSelect.disabled = true;
+            } else {
+                wardSelect.disabled = false;
+                filteredWards.forEach(option => {
+                    wardSelect.appendChild(option.cloneNode(true));
+                });
+            }
+
+            // Reset ward selection
+            wardSelect.value = '';
+        });
+
+        // Trigger change event if panchayat is already selected (for form edit)
+        if (panchayatSelect.value) {
+            panchayatSelect.dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+
 {% endblock %}
