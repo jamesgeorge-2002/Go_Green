@@ -1,0 +1,57 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Add Panchayath - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Add New Panchayath</h2>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Panchayath Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                            <small class="form-text text-muted">Enter the name of the panchayath/municipality</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Code *</label>
+                            <input type="text" class="form-control" id="code" name="code" placeholder="e.g., MEN, KAN" required>
+                            <small class="form-text text-muted">A unique short code for quick identification</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Optional: Enter additional details about the panchayath"></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'admin_panchayath' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Add Panchayath
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,7 +10,9 @@ from django.conf import settings
 from decimal import Decimal
 from collections import defaultdict
 from .forms import UserRegistrationForm, WorkerRegistrationForm, AdminRegistrationForm, LoginForm, PickupRequestForm, FeedbackForm, WasteWeightForm, UserProfileEditForm, ProfileEditForm
-from .models import PickupRequest, Reward, Profile, Ward, Payment, Feedback
+from .models import PickupRequest, Reward, Profile, Ward, Payment, Feedback, Panchayath
+import io
+from django.http import HttpResponse
 
 # Decorator for role-based access
 def role_required(allowed_roles):
@@ -285,9 +287,19 @@ def worker_dashboard_view(request):
     # Filter pickups by worker's ward
     pickups = PickupRequest.objects.filter(user__profile__ward=user_profile.ward).order_by('-created_at')
 
-    pending_pickups = pickups.filter(status='pending')
-    picked_pickups = pickups.filter(status='picked')
-    completed_pickups = pickups.filter(status='completed')
+    pending_qs = pickups.filter(status='pending')
+    picked_qs = pickups.filter(status='picked')
+    completed_qs = pickups.filter(status='completed')
+
+    # Attach payments to pickups to avoid RelatedObjectDoesNotExist in templates
+    def attach_payments(qs):
+        payments = Payment.objects.filter(pickup_request__in=qs)
+        payment_map = {p.pickup_request_id: p for p in payments}
+        return [{'pickup': p, 'payment': payment_map.get(p.pk)} for p in qs]
+
+    pending_pickups = attach_payments(pending_qs)
+    picked_pickups = attach_payments(picked_qs)
+    completed_pickups = attach_payments(completed_qs)
 
     # Filter feedbacks by worker's ward
     feedbacks = Feedback.objects.filter(ward=user_profile.ward).order_by('-created_at')
@@ -302,6 +314,165 @@ def worker_dashboard_view(request):
         'resolved_feedbacks': resolved_feedbacks,
     }
     return render(request, 'user_dashboard/worker_dashboard.html', context)
+
+
+@login_required
+@role_required(['worker'])
+def collect_cash_view(request, pk):
+    """Mark payment for a pickup as collected in cash."""
+    user_profile = Profile.objects.get(user=request.user)
+    pickup = get_object_or_404(PickupRequest, pk=pk, user__profile__ward=user_profile.ward)
+
+    try:
+        payment = pickup.payment
+    except Payment.DoesNotExist:
+        # Create a payment record and mark as completed (cash)
+        payment = Payment.objects.create(
+            user=pickup.user,
+            pickup_request=pickup,
+            amount=Decimal('100.00'),
+            status='completed',
+            razorpay_payment_id='cash'
+        )
+        messages.success(request, 'Payment recorded as collected (cash).')
+        return redirect('worker_dashboard')
+
+    if payment.status == 'completed':
+        messages.info(request, 'Payment was already completed.')
+    else:
+        payment.status = 'completed'
+        payment.razorpay_payment_id = 'cash'
+        payment.save()
+        messages.success(request, 'Payment marked as collected (cash).')
+
+    return redirect('worker_dashboard')
+
+def _generate_pickup_receipt_pdf(pickup):
+    """Generate a PDF receipt for a completed pickup."""
+    try:
+        from reportlab.pdfgen import canvas as pdf_canvas
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import mm
+    except ModuleNotFoundError:
+        return None
+
+    try:
+        payment = pickup.payment
+    except Payment.DoesNotExist:
+        payment = None
+
+    buffer = io.BytesIO()
+    p = pdf_canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    margin = 20 * mm
+    x = margin
+    y = height - margin
+
+    p.setFont('Helvetica-Bold', 16)
+    p.drawString(x, y, 'SWCMS - Waste Collection Receipt')
+    y -= 12 * mm
+
+    p.setFont('Helvetica', 10)
+    p.drawString(x, y, f'Request ID: {pickup.request_id}')
+    y -= 6 * mm
+    p.drawString(x, y, f'Date: {pickup.updated_at.strftime("%Y-%m-%d %H:%M") if pickup.updated_at else pickup.created_at.strftime("%Y-%m-%d %H:%M")}')
+    y -= 6 * mm
+
+    p.setFont('Helvetica-Bold', 12)
+    p.drawString(x, y, 'Customer Details')
+    y -= 6 * mm
+    p.setFont('Helvetica', 10)
+    p.drawString(x, y, f'Name: {pickup.user.get_full_name() or pickup.user.username}')
+    y -= 6 * mm
+    p.drawString(x, y, f'Email: {pickup.user.email or "-"}')
+    y -= 8 * mm
+
+    p.setFont('Helvetica-Bold', 12)
+    p.drawString(x, y, 'Pickup Details')
+    y -= 6 * mm
+    p.setFont('Helvetica', 10)
+    p.drawString(x, y, f'Waste Type: {pickup.get_waste_type_display()}')
+    y -= 6 * mm
+    p.drawString(x, y, f'Weight (kg): {pickup.waste_weight}')
+    y -= 6 * mm
+
+    amount_text = 'N/A'
+    payment_status = 'N/A'
+    if payment:
+        amount_text = f'₹{payment.amount}'
+        payment_status = payment.get_status_display()
+
+    y -= 4 * mm
+    p.setFont('Helvetica-Bold', 12)
+    p.drawString(x, y, 'Payment')
+    y -= 6 * mm
+    p.setFont('Helvetica', 10)
+    p.drawString(x, y, f'Amount: {amount_text}')
+    y -= 6 * mm
+    p.drawString(x, y, f'Status: {payment_status}')
+    y -= 12 * mm
+
+    # Previous pickups summary
+    previous_pickups = PickupRequest.objects.filter(
+        user=pickup.user,
+        status='completed'
+    ).exclude(pk=pickup.pk).order_by('-created_at')[:5]
+
+    if previous_pickups:
+        p.setFont('Helvetica-Bold', 12)
+        p.drawString(x, y, 'Previous Pickups (Last 5)')
+        y -= 6 * mm
+        p.setFont('Helvetica', 8)
+        for prev in previous_pickups:
+            prev_text = f"• {prev.get_waste_type_display()} - {prev.waste_weight}kg - {prev.created_at.strftime('%Y-%m-%d')}"
+            p.drawString(x, y, prev_text)
+            y -= 5 * mm
+        y -= 2 * mm
+    else:
+        p.setFont('Helvetica', 8)
+        p.drawString(x, y, '(No previous pickups)')
+        y -= 5 * mm
+
+    y -= 8 * mm
+    p.setFont('Helvetica', 10)
+    p.drawString(x, y, 'Thank you for using SWCMS. Please keep this receipt for your records.')
+    y -= 20 * mm
+
+    # Signature line
+    p.line(x, y, x + 60 * mm, y)
+    p.drawString(x, y - 5, 'Collector Signature')
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+
+    return buffer
+
+@login_required
+def print_receipt_view(request, pk):
+    """Print receipt for a completed pickup."""
+    user_profile = Profile.objects.get(user=request.user)
+    if user_profile.role != 'worker':
+        messages.error(request, "Access denied.")
+        return redirect('index')
+
+    pickup = get_object_or_404(PickupRequest, pk=pk, user__profile__ward=user_profile.ward)
+
+    if pickup.status != 'completed':
+        messages.error(request, "Can only print receipts for completed pickups.")
+        return redirect('worker_dashboard')
+
+    buffer = _generate_pickup_receipt_pdf(pickup)
+    if buffer is None:
+        messages.warning(request, 'PDF generation requires the reportlab package.')
+        return redirect('worker_dashboard')
+
+    filename = f'receipt_{pickup.request_id}.pdf'
+    resp = HttpResponse(buffer, content_type='application/pdf')
+    resp['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    return resp
 
 @login_required
 def mark_picked_view(request, pk):
@@ -404,10 +575,18 @@ def mark_completed_view(request, pk):
 
                 # Automatically recalculate rewards for all users
                 _recalculate_user_rewards()
-                messages.success(
-                    request,
-                    "Pickup marked as completed. Reward points have been recalculated based on total waste and its impact."
-                )
+
+                # Generate PDF receipt
+                buffer = _generate_pickup_receipt_pdf(pickup)
+                if buffer is None:
+                    messages.warning(request, 'PDF generation requires the reportlab package. Install it to enable receipts.')
+                    return redirect('worker_dashboard')
+
+                filename = f'receipt_{pickup.request_id}.pdf'
+                resp = HttpResponse(buffer, content_type='application/pdf')
+                resp['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+                return resp
             else:
                 messages.error(request, "Cannot mark this pickup as completed.")
             return redirect('worker_dashboard')
@@ -703,3 +882,213 @@ def admin_give_reward_to_least_waste_view(request):
         messages.error(request, "No users found to give reward.")
     
     return redirect('admin_rewards')
+
+@login_required
+@role_required(['admin'])
+def admin_panchayath_view(request):
+    """Display and manage panchayaths"""
+    panchayaths = Panchayath.objects.all().order_by('name')
+    
+    context = {
+        'panchayaths': panchayaths,
+        'page_title': 'Manage Panchayaths',
+    }
+    return render(request, 'user_dashboard/admin_panchayath.html', context)
+
+@login_required
+@role_required(['admin'])
+def admin_add_panchayath_view(request):
+    """Add a new panchayath"""
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        code = request.POST.get('code', '').strip()
+        description = request.POST.get('description', '').strip()
+        
+        if not name or not code:
+            messages.error(request, "Please fill in all required fields.")
+            return redirect('admin_add_panchayath')
+        
+        if Panchayath.objects.filter(name=name).exists():
+            messages.error(request, f"Panchayath '{name}' already exists.")
+            return redirect('admin_add_panchayath')
+        
+        if Panchayath.objects.filter(code=code).exists():
+            messages.error(request, f"Code '{code}' is already in use.")
+            return redirect('admin_add_panchayath')
+        
+        Panchayath.objects.create(
+            name=name,
+            code=code,
+            description=description
+        )
+        messages.success(request, f"Panchayath '{name}' added successfully!")
+        return redirect('admin_panchayath')
+    
+    context = {
+        'page_title': 'Add Panchayath',
+    }
+    return render(request, 'user_dashboard/admin_add_panchayath.html', context)
+
+@login_required
+@role_required(['admin'])
+def admin_edit_panchayath_view(request, pk):
+    """Edit an existing panchayath"""
+    panchayath = get_object_or_404(Panchayath, pk=pk)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        code = request.POST.get('code', '').strip()
+        description = request.POST.get('description', '').strip()
+        
+        if not name or not code:
+            messages.error(request, "Please fill in all required fields.")
+            return redirect('admin_edit_panchayath', pk=pk)
+        
+        # Check if name is already used by another panchayath
+        if Panchayath.objects.filter(name=name).exclude(pk=pk).exists():
+            messages.error(request, f"Panchayath '{name}' already exists.")
+            return redirect('admin_edit_panchayath', pk=pk)
+        
+        # Check if code is already used by another panchayath
+        if Panchayath.objects.filter(code=code).exclude(pk=pk).exists():
+            messages.error(request, f"Code '{code}' is already in use.")
+            return redirect('admin_edit_panchayath', pk=pk)
+        
+        panchayath.name = name
+        panchayath.code = code
+        panchayath.description = description
+        panchayath.save()
+        messages.success(request, f"Panchayath '{name}' updated successfully!")
+        return redirect('admin_panchayath')
+    
+    context = {
+        'panchayath': panchayath,
+        'page_title': f'Edit {panchayath.name}',
+    }
+    return render(request, 'user_dashboard/admin_edit_panchayath.html', context)
+
+@login_required
+@role_required(['admin'])
+def admin_delete_panchayath_view(request, pk):
+    """Delete a panchayath"""
+    panchayath = get_object_or_404(Panchayath, pk=pk)
+    
+    if panchayath.wards.exists():
+        messages.error(request, f"Cannot delete '{panchayath.name}' as it has {panchayath.wards.count()} ward(s). Delete all wards first.")
+        return redirect('admin_panchayath')
+    
+    panchayath_name = panchayath.name
+    panchayath.delete()
+    messages.success(request, f"Panchayath '{panchayath_name}' deleted successfully!")
+    return redirect('admin_panchayath')
+
+@login_required
+@role_required(['admin'])
+def admin_wards_management_view(request):
+    """Display and manage wards"""
+    wards = Ward.objects.select_related('panchayath').all().order_by('panchayath', 'ward_number')
+    panchayaths = Panchayath.objects.all().order_by('name')
+    
+    context = {
+        'wards': wards,
+        'panchayaths': panchayaths,
+        'page_title': 'Manage Wards',
+    }
+    return render(request, 'user_dashboard/admin_wards_management.html', context)
+
+@login_required
+@role_required(['admin'])
+def admin_add_ward_view(request):
+    """Add a new ward"""
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        panchayath_id = request.POST.get('panchayath')
+        ward_number = request.POST.get('ward_number', '').strip()
+        
+        if not name or not panchayath_id or not ward_number:
+            messages.error(request, "Please fill in all required fields.")
+            return redirect('admin_add_ward')
+        
+        try:
+            panchayath = Panchayath.objects.get(pk=panchayath_id)
+            ward_number = int(ward_number)
+        except (Panchayath.DoesNotExist, ValueError):
+            messages.error(request, "Invalid panchayath or ward number.")
+            return redirect('admin_add_ward')
+        
+        if Ward.objects.filter(panchayath=panchayath, ward_number=ward_number).exists():
+            messages.error(request, f"Ward {ward_number} already exists in {panchayath.name}.")
+            return redirect('admin_add_ward')
+        
+        Ward.objects.create(
+            name=name,
+            panchayath=panchayath,
+            ward_number=ward_number
+        )
+        messages.success(request, f"Ward {ward_number} in {panchayath.name} added successfully!")
+        return redirect('admin_wards_management')
+    
+    panchayaths = Panchayath.objects.all().order_by('name')
+    context = {
+        'panchayaths': panchayaths,
+        'page_title': 'Add Ward',
+    }
+    return render(request, 'user_dashboard/admin_add_ward.html', context)
+
+@login_required
+@role_required(['admin'])
+def admin_edit_ward_view(request, pk):
+    """Edit an existing ward"""
+    ward = get_object_or_404(Ward, pk=pk)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        panchayath_id = request.POST.get('panchayath')
+        ward_number = request.POST.get('ward_number', '').strip()
+        
+        if not name or not panchayath_id or not ward_number:
+            messages.error(request, "Please fill in all required fields.")
+            return redirect('admin_edit_ward', pk=pk)
+        
+        try:
+            panchayath = Panchayath.objects.get(pk=panchayath_id)
+            ward_number = int(ward_number)
+        except (Panchayath.DoesNotExist, ValueError):
+            messages.error(request, "Invalid panchayath or ward number.")
+            return redirect('admin_edit_ward', pk=pk)
+        
+        # Check if ward number already exists in this panchayath (excluding current ward)
+        if Ward.objects.filter(panchayath=panchayath, ward_number=ward_number).exclude(pk=pk).exists():
+            messages.error(request, f"Ward {ward_number} already exists in {panchayath.name}.")
+            return redirect('admin_edit_ward', pk=pk)
+        
+        ward.name = name
+        ward.panchayath = panchayath
+        ward.ward_number = ward_number
+        ward.save()
+        messages.success(request, f"Ward updated successfully!")
+        return redirect('admin_wards_management')
+    
+    panchayaths = Panchayath.objects.all().order_by('name')
+    context = {
+        'ward': ward,
+        'panchayaths': panchayaths,
+        'page_title': f'Edit {ward.name}',
+    }
+    return render(request, 'user_dashboard/admin_edit_ward.html', context)
+
+@login_required
+@role_required(['admin'])
+def admin_delete_ward_view(request, pk):
+    """Delete a ward"""
+    ward = get_object_or_404(Ward, pk=pk)
+    
+    # Check if ward is assigned to any users
+    if Profile.objects.filter(ward=ward).exists():
+        messages.error(request, f"Cannot delete '{ward.name}' as it is assigned to {Profile.objects.filter(ward=ward).count()} user(s).")
+        return redirect('admin_wards_management')
+    
+    ward_name = ward.name
+    ward.delete()
+    messages.success(request, f"Ward '{ward_name}' deleted successfully!")
+    return redirect('admin_wards_management')

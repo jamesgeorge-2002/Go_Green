@@ -1,448 +1,83 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - SWCMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        /* Custom CSS for SWCMS */
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-        }
+{% extends 'user_dashboard/base.html' %}
 
-        /* Navbar Styling */
-        .navbar {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 1rem 0;
-        }
+{% block title %}Admin Dashboard - SWCMS{% endblock %}
 
-        .navbar-brand {
-            color: #ffffff !important;
-            font-weight: 700;
-            font-size: 1.5rem;
-            letter-spacing: 1px;
-        }
-
-        .navbar-text {
-            color: #ecf0f1 !important;
-            font-weight: 500;
-            margin-right: 15px;
-        }
-
-        .nav-link {
-            color: #ecf0f1 !important;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            padding: 0.5rem 1rem !important;
-        }
-
-        .nav-link:hover {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        .navbar-toggler {
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-            min-height: calc(100vh - 56px);
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 56px;
-            left: 0;
-            width: 200px;
-            padding-top: 20px;
-        }
-
-        .sidebar-sticky {
-            position: sticky;
-            top: 0;
-            padding-top: 1rem;
-        }
-
-        .sidebar .nav-item {
-            margin-bottom: 5px;
-        }
-
-        .sidebar .nav-link {
-            color: #bdc3c7 !important;
-            padding: 12px 20px !important;
-            border-left: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar .nav-link:hover {
-            color: #ffffff !important;
-            background-color: rgba(52, 152, 219, 0.2);
-            border-left: 3px solid #3498db;
-        }
-
-        .sidebar .nav-link.active {
-            color: #ffffff !important;
-            background-color: rgba(52, 152, 219, 0.3);
-            border-left: 3px solid #3498db;
-            font-weight: 600;
-        }
-
-        .sidebar .bi {
-            margin-right: 10px;
-            vertical-align: -2px;
-        }
-
-        /* Main Content Area */
-        main {
-            padding-top: 20px;
-            min-height: calc(100vh - 56px);
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-            margin-top: 10px !important;
-        }
-
-        .container-fluid {
-            padding-left: 0;
-            padding-right: 0;
-        }
-
-        /* Alert Messages */
-        .alert {
-            border: none;
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-
-        .alert-warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border-left: 4px solid #ffc107;
-        }
-
-        .alert-info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border-left: 4px solid #17a2b8;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: static;
-                width: 100%;
-                min-height: auto;
-                margin-bottom: 20px;
-            }
-            
-            main {
-                margin-left: 0 !important;
-                width: 100%;
-            }
-            
-            .navbar-collapse {
-                background-color: rgba(44, 62, 80, 0.95);
-                padding: 15px;
-                border-radius: 5px;
-                margin-top: 10px;
-            }
-        }
-
-        /* Content Cards */
-        .card {
-            border: none;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            margin-bottom: 20px;
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-            font-weight: 600;
-            border-radius: 8px 8px 0 0 !important;
-            padding: 15px 20px;
-        }
-
-        /* Buttons */
-        .btn-primary {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            border: none;
-            border-radius: 4px;
-            padding: 8px 20px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #2980b9 0%, #1c6ea4 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
-        }
-
-        /* Tables */
-        .table {
-            background-color: white;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .table thead th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        /* Form Controls */
-        .form-control, .form-select {
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            padding: 8px 12px;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-        }
-
-        /* Footer (if added later) */
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px 0;
-            margin-top: 40px;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'index' %}">SWCMS</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <span class="navbar-text">Welcome, {{ user.username }}</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">Register</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
-            {% if user.is_authenticated %}
-            <nav class="col-md-2 d-none d-md-block sidebar">
-                <div class="sidebar-sticky">
-                    <ul class="nav flex-column">
-                        {% if user.profile.role == 'user' %}
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'index' %}">
-                                📊 Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'request_pickup' %}">
-                                🗑️ Request Pickup
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'request_management' %}">
-                                📋 Manage Requests
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'feedback' %}">
-                                💬 Feedback
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if user.profile.role == 'worker' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'worker_dashboard' %}">
-                                🛠️ Worker Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'feedback_management' %}">
-                                📝 Manage Feedback
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if user.profile.role == 'admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'admin_dashboard' %}">
-                                👑 Admin Overview
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin_users' %}">
-                                👥 Users
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin_feedbacks' %}">
-                                💭 Feedbacks
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin_rewards' %}">
-                                🏆 Rewards
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin_wards' %}">
-                                🏙️ Wards
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </nav>
-            {% endif %}
-
-            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
-                <div class="mt-4">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
-                    <div class="container mt-4">
-    <h1>Admin Dashboard</h1>
-    <p>Manage all aspects of the Smart Waste Collection & Management System.</p>
-
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Users</h5>
-                    <div class="stats-number">{{ total_users }}</div>
-                    <div class="stats-label">REGISTERED</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Pickups</h5>
-                    <div class="stats-number">{{ total_pickups }}</div>
-                    <div class="stats-label">REQUESTED</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Pending Pickups</h5>
-                    <div class="stats-number">{{ pending_pickups }}</div>
-                    <div class="stats-label">WAITING</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Completed Pickups</h5>
-                    <div class="stats-number">{{ completed_pickups }}</div>
-                    <div class="stats-label">DONE</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Feedbacks</h5>
-                    <div class="stats-number">{{ total_feedbacks }}</div>
-                    <div class="stats-label">SUBMITTED</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card stats-card">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Pending Feedbacks</h5>
-                    <div class="stats-number">{{ pending_feedbacks }}</div>
-                    <div class="stats-label">UNRESOLVED</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-4">
-        <h3>Admin Tools</h3>
-        <div class="row">
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'admin_users' %}" class="btn btn-primary w-100">Manage Users</a>
-            </div>
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'admin_feedbacks' %}" class="btn btn-primary w-100">Manage Feedbacks</a>
-            </div>
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'admin_rewards' %}" class="btn btn-primary w-100">Rewards</a>
-            </div>
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'admin_wards' %}" class="btn btn-primary w-100">Wards</a>
-            </div>
-        </div>
-    </div>
+{% block content %}
+<div class="dashboard-header">
+	<h1>Admin Dashboard</h1>
+	<p class="lead">Manage all aspects of the Smart Waste Collection & Management System.</p>
 </div>
-                </div>
-            </main>
-        </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<div class="row">
+	<div class="col-md-3">
+		<div class="card stats-card">
+			<div class="card-body text-center">
+				<h5 class="card-title">Total Users</h5>
+				<div class="stats-number">{{ total_users }}</div>
+				<div class="stats-label">REGISTERED</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3">
+		<div class="card stats-card">
+			<div class="card-body text-center">
+				<h5 class="card-title">Total Pickups</h5>
+				<div class="stats-number">{{ total_pickups }}</div>
+				<div class="stats-label">REQUESTED</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3">
+		<div class="card stats-card">
+			<div class="card-body text-center">
+				<h5 class="card-title">Pending Pickups</h5>
+				<div class="stats-number">{{ pending_pickups }}</div>
+				<div class="stats-label">WAITING</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3">
+		<div class="card stats-card">
+			<div class="card-body text-center">
+				<h5 class="card-title">Completed Pickups</h5>
+				<div class="stats-number">{{ completed_pickups }}</div>
+				<div class="stats-label">DONE</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="row mt-4">
+	<div class="col-md-6">
+		<div class="card stats-card">
+			<div class="card-body text-center">
+				<h5 class="card-title">Total Feedbacks</h5>
+				<div class="stats-number">{{ total_feedbacks }}</div>
+				<div class="stats-label">SUBMITTED</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="card stats-card">
+			<div class="card-body text-center">
+				<h5 class="card-title">Pending Feedbacks</h5>
+				<div class="stats-number">{{ pending_feedbacks }}</div>
+				<div class="stats-label">UNRESOLVED</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="mt-4">
+	<h3>Admin Tools</h3>
+	<div class="row">
+		<div class="col-md-3 mb-3"><a href="{% url 'admin_users' %}" class="btn btn-primary w-100">Manage Users</a></div>
+		<div class="col-md-3 mb-3"><a href="{% url 'admin_feedbacks' %}" class="btn btn-primary w-100">Manage Feedbacks</a></div>
+		<div class="col-md-3 mb-3"><a href="{% url 'admin_rewards' %}" class="btn btn-primary w-100">Rewards</a></div>
+		<div class="col-md-3 mb-3"><a href="{% url 'admin_wards' %}" class="btn btn-primary w-100">Wards</a></div>
+		<div class="col-md-3 mb-3"><a href="{% url 'admin_panchayath' %}" class="btn btn-info w-100">Manage Panchayaths</a></div>
+		<div class="col-md-3 mb-3"><a href="{% url 'admin_wards_management' %}" class="btn btn-info w-100">Manage Wards Details</a></div>
+	</div>
+</div>
+
+{% endblock %}

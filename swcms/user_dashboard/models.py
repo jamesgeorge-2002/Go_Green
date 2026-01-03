@@ -2,18 +2,32 @@ from django.db import models
 from django.contrib.auth.models import User
 import uuid
 
-class Ward(models.Model):
-    name = models.CharField(max_length=100)
-    panchayat_municipality_choices = [
-        ('meenichil', 'Meenichil'),
-        ('kanjirapally', 'Kanjirapally'),
-        ('kollam', 'Kollam'),
-    ]
-    panchayat_municipality = models.CharField(max_length=50, choices=panchayat_municipality_choices)
-    ward_number = models.IntegerField()
+class Panchayath(models.Model):
+    """Model to represent a Panchayath/Municipality"""
+    name = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Panchayaths"
+        ordering = ['name']
 
     def __str__(self):
-        return f"{self.name} ({self.panchayat_municipality}, Ward {self.ward_number})"
+        return self.name
+
+class Ward(models.Model):
+    name = models.CharField(max_length=100)
+    panchayath = models.ForeignKey(Panchayath, on_delete=models.CASCADE, related_name='wards', null=True, blank=True)
+    ward_number = models.IntegerField()
+
+    class Meta:
+        unique_together = ['panchayath', 'ward_number']
+        ordering = ['panchayath', 'ward_number']
+
+    def __str__(self):
+        return f"{self.name} ({self.panchayath.name}, Ward {self.ward_number})" if self.panchayath else f"{self.name} (Ward {self.ward_number})"
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

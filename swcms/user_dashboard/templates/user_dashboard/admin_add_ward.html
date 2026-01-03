@@ -1,0 +1,62 @@
+{% extends 'user_dashboard/base.html' %}
+
+{% block title %}Add Ward - SWCMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Add New Ward</h2>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Ward Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="e.g., Meenichil Ward 1" required>
+                            <small class="form-text text-muted">Enter a descriptive name for the ward</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="panchayath" class="form-label">Panchayath *</label>
+                            <select class="form-control" id="panchayath" name="panchayath" required>
+                                <option value="">-- Select a Panchayath --</option>
+                                {% for panchayath in panchayaths %}
+                                    <option value="{{ panchayath.pk }}">{{ panchayath.name }} ({{ panchayath.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ward_number" class="form-label">Ward Number *</label>
+                            <input type="number" class="form-control" id="ward_number" name="ward_number" min="1" placeholder="e.g., 1, 2, 3" required>
+                            <small class="form-text text-muted">Enter a numeric identifier for this ward</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'admin_wards_management' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Add Ward
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

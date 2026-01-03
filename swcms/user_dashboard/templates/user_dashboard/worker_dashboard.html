@@ -677,7 +677,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for pickup in pending_pickups %}
+                            {% for item in pending_pickups %}
+                                {% with pickup=item.pickup %}
                                 <tr>
                                     <td><code>{{ pickup.request_id|slice:":8" }}</code></td>
                                     <td>{{ pickup.user.username }}</td>
@@ -691,6 +692,7 @@
                                         </a>
                                     </td>
                                 </tr>
+                                {% endwith %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -712,22 +714,41 @@
                                 <th>User</th>
                                 <th>Waste Type</th>
                                 <th>Schedule Date & Time</th>
+                                <th>Payment</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for pickup in picked_pickups %}
+                            {% for item in picked_pickups %}
+                                {% with pickup=item.pickup payment=item.payment %}
                                 <tr>
                                     <td><code>{{ pickup.request_id|slice:":8" }}</code></td>
                                     <td>{{ pickup.user.username }}</td>
                                     <td><span class="badge bg-info">{{ pickup.get_waste_type_display }}</span></td>
                                     <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
                                     <td>
+                                        {% if payment %}
+                                            {% if payment.status == 'completed' %}
+                                                <span class="badge bg-success">Paid</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">No payment</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
                                         <a href="{% url 'mark_completed' pickup.pk %}" class="btn btn-sm btn-primary" onclick="return confirm('Mark this pickup as completed? You will need to enter the waste weight.')">
                                             <i class="bi bi-check2-all"></i> Mark as Completed
                                         </a>
+                                        {% if not payment or payment.status != 'completed' %}
+                                            <a href="{% url 'collect_cash' pickup.pk %}" class="btn btn-sm btn-outline-primary ms-2" onclick="return confirm('Confirm cash collected from the user?')">
+                                                <i class="bi bi-cash-stack"></i> Collect Cash
+                                            </a>
+                                        {% endif %}
                                     </td>
                                 </tr>
+                                {% endwith %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -751,18 +772,37 @@
                                 <th>Weight (kg)</th>
                                 <th>Schedule Date & Time</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for pickup in completed_pickups %}
+                            {% for item in completed_pickups %}
+                                {% with pickup=item.pickup payment=item.payment %}
                                 <tr>
                                     <td><code>{{ pickup.request_id|slice:":8" }}</code></td>
                                     <td>{{ pickup.user.username }}</td>
                                     <td><span class="badge bg-info">{{ pickup.get_waste_type_display }}</span></td>
                                     <td><strong>{{ pickup.waste_weight|default:"N/A" }}</strong></td>
                                     <td>{{ pickup.schedule_date_time|date:"M d, Y H:i" }}</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>
+                                        <span class="badge bg-success">Completed</span>
+                                        {% if payment %}
+                                            {% if payment.status == 'completed' %}
+                                                <span class="badge bg-success ms-2">Paid</span>
+                                            {% else %}
+                                                <span class="badge bg-warning ms-2">Payment Pending</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary ms-2">No payment</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'print_receipt' pickup.pk %}" class="btn btn-sm btn-primary" target="_blank">
+                                            <i class="bi bi-printer"></i> Print Receipt
+                                        </a>
+                                    </td>
                                 </tr>
+                                {% endwith %}
                             {% endfor %}
                         </tbody>
                     </table>

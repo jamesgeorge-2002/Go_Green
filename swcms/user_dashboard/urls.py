@@ -1,4 +1,6 @@
 from django.urls import path
+from django.urls import reverse_lazy
+from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
@@ -22,6 +24,8 @@ urlpatterns = [
     path('worker-dashboard/', views.worker_dashboard_view, name='worker_dashboard'),
     path('mark-picked/<int:pk>/', views.mark_picked_view, name='mark_picked'),
     path('mark-completed/<int:pk>/', views.mark_completed_view, name='mark_completed'),
+    path('collect-cash/<int:pk>/', views.collect_cash_view, name='collect_cash'),
+    path('print-receipt/<int:pk>/', views.print_receipt_view, name='print_receipt'),
     path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('admin-users/', views.admin_users_view, name='admin_users'),
     path('admin-feedbacks/', views.admin_feedbacks_view, name='admin_feedbacks'),
@@ -37,4 +41,28 @@ urlpatterns = [
     path('admin-add-worker/', views.admin_add_worker_view, name='admin_add_worker'),
     path('admin-delete-user/<int:pk>/', views.admin_delete_user_view, name='admin_delete_user'),
     path('admin-give-reward-least-waste/', views.admin_give_reward_to_least_waste_view, name='admin_give_reward_least_waste'),
+    path('admin-panchayath/', views.admin_panchayath_view, name='admin_panchayath'),
+    path('admin-panchayath/add/', views.admin_add_panchayath_view, name='admin_add_panchayath'),
+    path('admin-panchayath/<int:pk>/edit/', views.admin_edit_panchayath_view, name='admin_edit_panchayath'),
+    path('admin-panchayath/<int:pk>/delete/', views.admin_delete_panchayath_view, name='admin_delete_panchayath'),
+    path('admin-wards-management/', views.admin_wards_management_view, name='admin_wards_management'),
+    path('admin-wards/add/', views.admin_add_ward_view, name='admin_add_ward'),
+    path('admin-wards/<int:pk>/edit/', views.admin_edit_ward_view, name='admin_edit_ward'),
+    path('admin-wards/<int:pk>/delete/', views.admin_delete_ward_view, name='admin_delete_ward'),
+    # Password reset (using Django built-in auth views with app templates)
+    path('password-reset/', auth_views.PasswordResetView.as_view(
+        template_name='user_dashboard/password_reset_form.html',
+        email_template_name='user_dashboard/password_reset_email.html',
+        success_url=reverse_lazy('password_reset_done')
+    ), name='password_reset'),
+    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(
+        template_name='user_dashboard/password_reset_done.html'
+    ), name='password_reset_done'),
+    path('password-reset/confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+        template_name='user_dashboard/password_reset_confirm.html',
+        success_url=reverse_lazy('password_reset_complete')
+    ), name='password_reset_confirm'),
+    path('password-reset/complete/', auth_views.PasswordResetCompleteView.as_view(
+        template_name='user_dashboard/password_reset_complete.html'
+    ), name='password_reset_complete'),
 ]

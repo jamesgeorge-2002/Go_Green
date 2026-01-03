@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Profile, PickupRequest, Ward, Reward, Feedback
+from .models import Profile, PickupRequest, Ward, Panchayath, Reward, Feedback
 from datetime import datetime
 
 class UserRegistrationForm(forms.ModelForm):
@@ -9,7 +9,7 @@ class UserRegistrationForm(forms.ModelForm):
     confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
     mobile_number = forms.CharField(max_length=15, required=False)
     location = forms.CharField(max_length=255)
-    panchayat_municipality = forms.ChoiceField(choices=Ward.panchayat_municipality_choices)
+    panchayath = forms.ModelChoiceField(queryset=Panchayath.objects.all(), label="Select Panchayath")
     ward = forms.ModelChoiceField(queryset=Ward.objects.all(), required=True, label="Select Ward")
 
     class Meta:
@@ -53,7 +53,7 @@ class WorkerRegistrationForm(forms.ModelForm):
     confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
     mobile_number = forms.CharField(max_length=15, required=False)
     location = forms.CharField(max_length=255)
-    panchayat_municipality = forms.ChoiceField(choices=Ward.panchayat_municipality_choices)
+    panchayath = forms.ModelChoiceField(queryset=Panchayath.objects.all(), label="Select Panchayath")
     ward = forms.ModelChoiceField(queryset=Ward.objects.all(), required=True, label="Select Ward")
 
     class Meta:
@@ -96,7 +96,7 @@ class AdminRegistrationForm(forms.ModelForm):
     confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
     mobile_number = forms.CharField(max_length=15, required=False)
     location = forms.CharField(max_length=255)
-    panchayat_municipality = forms.ChoiceField(choices=Ward.panchayat_municipality_choices)
+    panchayath = forms.ModelChoiceField(queryset=Panchayath.objects.all(), label="Select Panchayath")
     ward = forms.ModelChoiceField(queryset=Ward.objects.all(), required=True, label="Select Ward")
 
     class Meta:
